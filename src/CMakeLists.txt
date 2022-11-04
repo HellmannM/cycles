@@ -451,7 +451,7 @@ if(WITH_CYCLES_BLENDER)
   add_subdirectory(blender)
 endif()
 
-add_subdirectory(app)
+# add_subdirectory(app)
 add_subdirectory(bvh)
 add_subdirectory(device)
 add_subdirectory(doc)
@@ -462,6 +462,7 @@ add_subdirectory(scene)
 add_subdirectory(session)
 add_subdirectory(subd)
 add_subdirectory(util)
+add_subdirectory(viewer)
 
 # TODO(sergey): Make this to work with standalone repository.
 if(WITH_GTESTS)
