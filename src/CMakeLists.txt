@@ -451,6 +451,7 @@ if(WITH_CYCLES_BLENDER)
   add_subdirectory(blender)
 endif()
 
+add_subdirectory(anari)
 # add_subdirectory(app)
 add_subdirectory(bvh)
 add_subdirectory(device)
