@@ -1,0 +1,31 @@
+{
+  "info": {
+    "name": "CYCLES_DEVICE",
+    "type": "device",
+    "dependencies": [
+      "anari_core_1_0",
+      "anari_core_objects_base_1_0",
+      "khr_camera_orthographic",
+      "khr_camera_perspective",
+      "khr_geometry_triangle",
+      "khr_material_matte",
+      "khr_material_transparent_matte"
+    ]
+  },
+  "objects": [
+    {
+      "type": "ANARI_RENDERER",
+      "name": "default",
+      "parameters": [
+        {
+          "name": "name",
+          "types": [
+            "ANARI_STRING"
+          ],
+          "tags": [],
+          "description": "optional object name"
+        }
+      ]
+    }
+  ]
+}
