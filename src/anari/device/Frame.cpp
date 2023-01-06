@@ -74,7 +74,7 @@ bool Frame::getProperty(const std::string_view &name,
   else if (type == ANARI_INT32 && name == "numSamples") {
     if (flags & ANARI_WAIT)
       wait();
-    helium::writeToVoidP(ptr, deviceState()->sessionSamples);
+    helium::writeToVoidP(ptr, int(deviceState()->sessionSamples));
     return true;
   }
   else if (type == ANARI_BOOL && name == "nextFrameReset") {

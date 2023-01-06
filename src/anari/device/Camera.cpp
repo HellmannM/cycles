@@ -9,16 +9,26 @@ namespace cycles {
 
 // Subtype declarations ///////////////////////////////////////////////////////
 
-struct Perspective : public Camera
-{
+struct Perspective : public Camera {
   Perspective(CyclesGlobalState *s);
 
   void commit() override;
   void setCameraCurrent(int width, int height) override;
 
  private:
-   float m_fovy{radians(60.f)};
-   float m_aspect{1.f};
+  float m_fovy{radians(60.f)};
+  float m_aspect{1.f};
+};
+
+struct Orthographic : public Camera {
+  Orthographic(CyclesGlobalState *s);
+
+  void commit() override;
+  void setCameraCurrent(int width, int height) override;
+
+ private:
+  float m_height{1.f};
+  float m_aspect{1.f};
 };
 
 // Camera definitions /////////////////////////////////////////////////////////
@@ -37,10 +47,8 @@ Camera *Camera::createInstance(std::string_view type, CyclesGlobalState *s)
 {
   if (type == "perspective")
     return new Perspective(s);
-#if 0
   else if (type == "orthographic")
     return new Orthographic(s);
-#endif
   else
     return (Camera *)new UnknownObject(ANARI_CAMERA, s);
 }
@@ -58,7 +66,6 @@ void Camera::setCameraCurrent(int width, int height)
   state.scene->camera->set_matrix(getMatrix());
   state.scene->camera->set_full_width(width);
   state.scene->camera->set_full_height(height);
-  state.scene->camera->compute_auto_viewplane();
   state.scene->camera->need_flags_update = true;
   state.scene->camera->need_device_update = true;
 }
@@ -98,9 +105,39 @@ void Perspective::commit()
 
 void Perspective::setCameraCurrent(int width, int height)
 {
-  auto &state = *deviceState();
-  state.scene->camera->set_fov(m_fovy * m_aspect);
   Camera::setCameraCurrent(width, height);
+  auto &state = *deviceState();
+  state.scene->camera->viewplane.left = -m_aspect;
+  state.scene->camera->viewplane.right = m_aspect;
+  state.scene->camera->viewplane.bottom = -1.0f;
+  state.scene->camera->viewplane.top = 1.0f;
+  state.scene->camera->set_fov(m_fovy);
+  state.scene->camera->set_camera_type(ccl::CameraType::CAMERA_PERSPECTIVE);
+}
+
+// Orthographic definitions ///////////////////////////////////////////////////
+
+Orthographic::Orthographic(CyclesGlobalState *s) : Camera(s)
+{
+}
+
+void Orthographic::commit()
+{
+  Camera::commit();
+  m_height = getParam<float>("height", 1.f);
+  m_aspect = getParam<float>("aspect", 1.f);
+}
+
+void Orthographic::setCameraCurrent(int width, int height)
+{
+  Camera::setCameraCurrent(width, height);
+  auto &state = *deviceState();
+  state.scene->camera->set_camera_type(ccl::CameraType::CAMERA_ORTHOGRAPHIC);
+  auto scale = m_height / 2.f;
+  state.scene->camera->viewplane.left = -m_aspect * scale;
+  state.scene->camera->viewplane.right = m_aspect * scale;
+  state.scene->camera->viewplane.bottom = -scale;
+  state.scene->camera->viewplane.top = scale;
 }
 
 }  // namespace cycles
