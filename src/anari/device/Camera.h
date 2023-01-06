@@ -15,24 +15,14 @@ struct Camera : public Object {
   static Camera *createInstance(std::string_view type, CyclesGlobalState *state);
 
   virtual void commit() override;
-
-  ccl::Transform getMatrix() const;
+  virtual void setCameraCurrent(int width, int height);
 
  protected:
+  ccl::Transform getMatrix() const;
+
   float3 m_pos;
   float3 m_dir;
   float3 m_up;
-};
-
-struct Perspective : public Camera
-{
-  Perspective(CyclesGlobalState *s);
-
-  void commit() override;
-
- private:
-   float m_fovy{radians(60.f)};
-   float m_aspect{1.f};
 };
 
 }  // namespace cycles

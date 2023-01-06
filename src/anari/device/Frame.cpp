@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Frame.h"
-// cycles
-#include "scene/camera.h"
 
 namespace cycles {
 
@@ -118,13 +116,7 @@ void Frame::renderFrame()
 
     state.lastFrameRendered = this;
 
-    state.scene->camera->set_matrix(m_camera->getMatrix());
-    state.scene->camera->set_full_width(m_frameData.size.x);
-    state.scene->camera->set_full_height(m_frameData.size.y);
-    state.scene->camera->compute_auto_viewplane();
-    state.scene->camera->need_flags_update = true;
-    state.scene->camera->need_device_update = true;
-
+    m_camera->setCameraCurrent(m_frameData.size.x, m_frameData.size.y);
     m_world->setWorldObjectsCurrent();
 
     state.buffer_params.width = m_frameData.size.x;

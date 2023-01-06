@@ -2,8 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Camera.h"
+// cycles
+#include "scene/camera.h"
 
 namespace cycles {
+
+// Subtype declarations ///////////////////////////////////////////////////////
+
+struct Perspective : public Camera
+{
+  Perspective(CyclesGlobalState *s);
+
+  void commit() override;
+  void setCameraCurrent(int width, int height) override;
+
+ private:
+   float m_fovy{radians(60.f)};
+   float m_aspect{1.f};
+};
+
+// Camera definitions /////////////////////////////////////////////////////////
 
 Camera::Camera(CyclesGlobalState *s) : Object(ANARI_CAMERA, s)
 {
@@ -34,11 +52,22 @@ void Camera::commit()
   m_up = normalize(getParam<float3>("up", make_float3(0.f, 1.f, 0.f)));
 }
 
+void Camera::setCameraCurrent(int width, int height)
+{
+  auto &state = *deviceState();
+  state.scene->camera->set_matrix(getMatrix());
+  state.scene->camera->set_full_width(width);
+  state.scene->camera->set_full_height(height);
+  state.scene->camera->compute_auto_viewplane();
+  state.scene->camera->need_flags_update = true;
+  state.scene->camera->need_device_update = true;
+}
+
 ccl::Transform Camera::getMatrix() const
 {
   ccl::Transform retval;
   const auto s = ccl::normalize(ccl::cross(m_dir, m_up));
-  const auto u = ccl::cross(s, m_dir);
+  const auto u = ccl::normalize(ccl::cross(s, m_dir));
   retval.x[0] = s.x;
   retval.x[1] = u.x;
   retval.x[2] = m_dir.x;
@@ -65,6 +94,13 @@ void Perspective::commit()
   Camera::commit();
   m_fovy = getParam<float>("fovy", radians(60.f));
   m_aspect = getParam<float>("aspect", 1.f);
+}
+
+void Perspective::setCameraCurrent(int width, int height)
+{
+  auto &state = *deviceState();
+  state.scene->camera->set_fov(m_fovy * m_aspect);
+  Camera::setCameraCurrent(width, height);
 }
 
 }  // namespace cycles
