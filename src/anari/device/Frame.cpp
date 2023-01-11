@@ -118,6 +118,7 @@ void Frame::renderFrame()
 
     m_camera->setCameraCurrent(m_frameData.size.x, m_frameData.size.y);
     m_world->setWorldObjectsCurrent();
+    m_renderer->makeRendererCurrent();
 
     state.buffer_params.width = m_frameData.size.x;
     state.buffer_params.height = m_frameData.size.y;

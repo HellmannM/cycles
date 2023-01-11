@@ -8,7 +8,7 @@
 #include "anari/backend/LibraryImpl.h"
 #include "anari/ext/debug/DebugObject.h"
 #include "anari/type_utility.h"
-//cycles
+// cycles
 #include "scene/integrator.h"
 
 #include "Frame.h"
@@ -387,24 +387,32 @@ void CyclesDevice::initDevice()
 
   state.session->set_output_driver(std::move(output_driver));
 
+  // setup background shader (divides out ambient and bg color)
   {
     auto *shader = state.scene->default_background;
     auto *graph = new ccl::ShaderGraph();
 
-    auto *bg = new ccl::BackgroundNode();
-    bg->set_owner(graph);
-    bg->input("Color")->set(ccl::make_float3(0.8f, 0.8f, 0.8f));
-    bg->input("Strength")->set(1.f);
+    auto *mix = graph->create_node<ccl::MixClosureNode>();
+    graph->add(mix);
+
+    auto *lightPath = graph->create_node<ccl::LightPathNode>();
+    graph->add(lightPath);
+
+    auto *bg = graph->create_node<ccl::BackgroundNode>();
     graph->add(bg);
 
-    ccl::ShaderOutput *output = bg->output("Background");
-    ccl::ShaderInput *input = graph->output()->input("Surface");
+    auto *ambient = graph->create_node<ccl::BackgroundNode>();
+    graph->add(ambient);
 
-    if (output && input)
-      graph->connect(output, input);
+    state.background = bg;
+    state.ambient = ambient;
+
+    graph->connect(ambient->output("Background"), mix->input("Closure1"));
+    graph->connect(bg->output("Background"), mix->input("Closure2"));
+    graph->connect(lightPath->output("Is Camera Ray"), mix->input("Fac"));
+    graph->connect(mix->output("Closure"), graph->output()->input("Surface"));
 
     shader->set_graph(graph);
-    shader->tag_update(state.scene);
   }
 
   m_initialized = true;

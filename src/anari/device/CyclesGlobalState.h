@@ -9,6 +9,10 @@
 // cycles
 #include "session/session.h"
 
+namespace ccl {
+struct BackgroundNode;
+}  // namespace ccl
+
 namespace cycles {
 
 struct CyclesGlobalState : public helium::BaseGlobalDeviceState {
@@ -43,6 +47,9 @@ struct CyclesGlobalState : public helium::BaseGlobalDeviceState {
 
   FrameOutputDriver *output_driver{nullptr};
   Frame *lastFrameRendered{nullptr};
+
+  ccl::BackgroundNode *background{nullptr};
+  ccl::BackgroundNode *ambient{nullptr};
 
   // Helper methods //
 
