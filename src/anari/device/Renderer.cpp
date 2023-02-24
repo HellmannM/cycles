@@ -20,6 +20,8 @@ Renderer::~Renderer()
 void Renderer::commit()
 {
   m_backgroundColor = getParam<anari_vec::float4>("backgroundColor", {1.f, 1.f, 1.f, 1.f});
+  m_ambientColor = getParam<anari_vec::float3>("ambientColor", {1.f, 1.f, 1.f});
+  m_ambientIntensity = getParam<float>("ambientIntensity", 1.f);
 }
 
 void Renderer::makeRendererCurrent() const
@@ -34,8 +36,9 @@ void Renderer::makeRendererCurrent() const
   state.background->set_color(ccl::make_float3(bgc[0], bgc[1], bgc[2]));
   state.background->set_strength(1.f);
 
-  state.ambient->set_color(ccl::make_float3(1.f, 1.f, 1.f));
-  state.ambient->set_strength(2.f);
+  state.ambient->set_color(
+      ccl::make_float3(m_ambientColor[0], m_ambientColor[1], m_ambientColor[2]));
+  state.ambient->set_strength(m_ambientIntensity);
 
   state.scene->default_background->tag_update(state.scene);
 }

@@ -17,6 +17,8 @@ struct Renderer : public Object {
 
  private:
   anari_vec::float4 m_backgroundColor;
+  anari_vec::float3 m_ambientColor;
+  float m_ambientIntensity;
 };
 
 }  // namespace cycles

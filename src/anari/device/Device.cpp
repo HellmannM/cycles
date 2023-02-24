@@ -151,11 +151,7 @@ ANARIArray3D CyclesDevice::newArray3D(const void *appMemory,
 ANARILight CyclesDevice::newLight(const char *subtype)
 {
   initDevice();
-#if 1
-  return createPlaceholderHandle<ANARILight>(deviceState());
-#else
   return getHandleForAPI<ANARILight>(Light::createInstance(subtype, deviceState()));
-#endif
 }
 
 ANARICamera CyclesDevice::newCamera(const char *subtype)
@@ -311,6 +307,7 @@ CyclesDevice::~CyclesDevice()
   // We don't want the ccl::Scene deleting these objects, they are already gone
   state.scene->geometry.clear();
   state.scene->objects.clear();
+  state.scene->lights.clear();
   state.scene->shaders.clear();
 
   reportMessage(ANARI_SEVERITY_DEBUG, "destroying cycles device (%p)", this);
@@ -334,6 +331,7 @@ CyclesDevice::~CyclesDevice()
   reportLeaks(state.objectCounts.worlds, "ANARIWorld");
   reportLeaks(state.objectCounts.instances, "ANARIInstance");
   reportLeaks(state.objectCounts.groups, "ANARIGroup");
+  reportLeaks(state.objectCounts.lights, "ANARILight");
   reportLeaks(state.objectCounts.surfaces, "ANARISurface");
   reportLeaks(state.objectCounts.geometries, "ANARIGeometry");
   reportLeaks(state.objectCounts.materials, "ANARIMaterial");
@@ -413,6 +411,23 @@ void CyclesDevice::initDevice()
     graph->connect(mix->output("Closure"), graph->output()->input("Surface"));
 
     shader->set_graph(graph);
+  }
+
+  // setup global light shader
+  {
+    auto *shader = state.scene->default_light;
+    auto *graph = new ccl::ShaderGraph();
+
+    auto *emission = graph->create_node<ccl::EmissionNode>();
+    emission->set_color(make_float3(1.f, 1.f, 1.f));
+    emission->set_strength(4.0f); // to match VisRTX
+    graph->add(emission);
+
+    graph->connect(emission->output("Emission"), graph->output()->input("Surface"));
+
+    shader->name = "default_anari_light";
+    shader->set_graph(graph);
+    shader->reference();
   }
 
   m_initialized = true;

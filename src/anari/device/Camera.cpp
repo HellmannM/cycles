@@ -55,9 +55,9 @@ Camera *Camera::createInstance(std::string_view type, CyclesGlobalState *s)
 
 void Camera::commit()
 {
-  m_pos = getParam<float3>("position", make_float3(0.f));
-  m_dir = normalize(getParam<float3>("direction", make_float3(0.f, 0.f, 1.f)));
-  m_up = normalize(getParam<float3>("up", make_float3(0.f, 1.f, 0.f)));
+  m_pos = getParam<anari_vec::float3>("position", {0.f, 0.f, 0.f});
+  m_dir = getParam<anari_vec::float3>("direction", {0.f, 0.f, 1.f});
+  m_up = getParam<anari_vec::float3>("up", {0.f, 1.f, 0.f});
 }
 
 void Camera::setCameraCurrent(int width, int height)
@@ -73,20 +73,25 @@ void Camera::setCameraCurrent(int width, int height)
 ccl::Transform Camera::getMatrix() const
 {
   ccl::Transform retval;
-  const auto s = ccl::normalize(ccl::cross(m_dir, m_up));
-  const auto u = ccl::normalize(ccl::cross(s, m_dir));
+
+  auto dir = normalize(ccl::make_float3(m_dir[0], m_dir[1], m_dir[2]));
+  auto pos = ccl::make_float3(m_pos[0], m_pos[1], m_pos[2]);
+  auto up = normalize(ccl::make_float3(m_up[0], m_up[1], m_up[2]));
+
+  const auto s = ccl::normalize(ccl::cross(dir, up));
+  const auto u = ccl::normalize(ccl::cross(s, dir));
   retval.x[0] = s.x;
   retval.x[1] = u.x;
-  retval.x[2] = m_dir.x;
+  retval.x[2] = dir.x;
   retval.y[0] = s.y;
   retval.y[1] = u.y;
-  retval.y[2] = m_dir.y;
+  retval.y[2] = dir.y;
   retval.z[0] = s.z;
   retval.z[1] = u.z;
-  retval.z[2] = m_dir.z;
-  retval.x[3] = m_pos.x;
-  retval.y[3] = m_pos.y;
-  retval.z[3] = m_pos.z;
+  retval.z[2] = dir.z;
+  retval.x[3] = pos.x;
+  retval.y[3] = pos.y;
+  retval.z[3] = pos.z;
   return retval;
 }
 

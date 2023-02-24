@@ -20,9 +20,9 @@ struct Camera : public Object {
  protected:
   ccl::Transform getMatrix() const;
 
-  float3 m_pos;
-  float3 m_dir;
-  float3 m_up;
+  anari_vec::float3 m_pos;
+  anari_vec::float3 m_dir;
+  anari_vec::float3 m_up;
 };
 
 }  // namespace cycles

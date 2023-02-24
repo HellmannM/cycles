@@ -65,6 +65,7 @@ PRIVATE
   Frame.cpp
   FrameOutputDriver.cpp
   Geometry.cpp
+  Light.cpp
   Material.cpp
   Object.cpp
   Renderer.cpp

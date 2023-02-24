@@ -30,6 +30,7 @@ struct CyclesGlobalState : public helium::BaseGlobalDeviceState {
     size_t worlds{0};
     size_t instances{0};
     size_t groups{0};
+    size_t lights{0};
     size_t surfaces{0};
     size_t geometries{0};
     size_t materials{0};

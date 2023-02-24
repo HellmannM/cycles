@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "Light.h"
 #include "Surface.h"
 #include "array/ObjectArray.h"
 
@@ -20,6 +21,7 @@ struct World : public Object {
   void cleanup();
 
   helium::IntrusivePtr<ObjectArray> m_zeroSurfaceData;
+  helium::IntrusivePtr<ObjectArray> m_zeroLightData;
 };
 
 }  // namespace cycles
