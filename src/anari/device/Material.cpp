@@ -61,3 +61,5 @@ ccl::Shader *Material::cyclesShader()
 }
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_DEFINITION(cycles::Material *);

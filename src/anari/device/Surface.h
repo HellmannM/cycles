@@ -35,3 +35,5 @@ struct Surface : public Object {
 };
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Surface *, ANARI_SURFACE);

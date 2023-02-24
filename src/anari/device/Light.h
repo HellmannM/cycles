@@ -29,3 +29,5 @@ struct Light : public Object {
 };
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Light *, ANARI_LIGHT);

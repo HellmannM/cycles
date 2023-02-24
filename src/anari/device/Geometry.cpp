@@ -128,3 +128,5 @@ void Geometry::markCommitted()
 }
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_DEFINITION(cycles::Geometry *);

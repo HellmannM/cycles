@@ -84,3 +84,5 @@ void Directional::commit()
 }
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_DEFINITION(cycles::Light *);

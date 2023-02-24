@@ -44,3 +44,5 @@ void Renderer::makeRendererCurrent() const
 }
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_DEFINITION(cycles::Renderer *);

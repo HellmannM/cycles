@@ -26,3 +26,5 @@ struct Camera : public Object {
 };
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Camera *, ANARI_CAMERA);

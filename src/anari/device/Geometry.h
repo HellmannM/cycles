@@ -22,3 +22,5 @@ struct Geometry : public Object {
 };
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Geometry *, ANARI_GEOMETRY);

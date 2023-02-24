@@ -22,3 +22,5 @@ struct Renderer : public Object {
 };
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Renderer *, ANARI_RENDERER);

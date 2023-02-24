@@ -24,3 +24,5 @@ struct Material : public Object {
 };
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Material *, ANARI_MATERIAL);

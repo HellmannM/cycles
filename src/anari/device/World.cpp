@@ -70,3 +70,5 @@ void World::cleanup()
 }
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_DEFINITION(cycles::World *);

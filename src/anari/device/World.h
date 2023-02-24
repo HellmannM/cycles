@@ -25,3 +25,5 @@ struct World : public Object {
 };
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::World *, ANARI_WORLD);

@@ -146,3 +146,5 @@ void Orthographic::setCameraCurrent(int width, int height)
 }
 
 }  // namespace cycles
+
+CYCLES_ANARI_TYPEFOR_DEFINITION(cycles::Camera *);
