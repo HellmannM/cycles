@@ -360,7 +360,9 @@ void CyclesDevice::initDevice()
 
   auto &state = *deviceState();
 
-  state.session_params.device.type = ccl::DEVICE_CPU;
+  auto *useGPU = getenv("CYCLES_ANARI_USE_GPU");
+
+  state.session_params.device.type = useGPU ? ccl::DEVICE_OPTIX : ccl::DEVICE_CPU;
   state.session_params.background = false;
   state.session_params.headless = false;
   state.session_params.use_auto_tile = false;
@@ -420,7 +422,7 @@ void CyclesDevice::initDevice()
 
     auto *emission = graph->create_node<ccl::EmissionNode>();
     emission->set_color(make_float3(1.f, 1.f, 1.f));
-    emission->set_strength(4.0f); // to match VisRTX
+    emission->set_strength(4.0f);  // to match VisRTX
     graph->add(emission);
 
     graph->connect(emission->output("Emission"), graph->output()->input("Surface"));
