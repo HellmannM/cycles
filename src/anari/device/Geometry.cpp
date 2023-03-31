@@ -18,10 +18,12 @@ struct Triangle : public Geometry {
  private:
   void setVertices(ccl::Mesh *mesh);
   void setIndices(ccl::Mesh *mesh);
+  void setNormals(ccl::Mesh *mesh);
   void cleanup();
 
   helium::IntrusivePtr<Array1D> m_index;
   helium::IntrusivePtr<Array1D> m_vertexPosition;
+  helium::IntrusivePtr<Array1D> m_vertexNormal;
 };
 
 Triangle::Triangle(CyclesGlobalState *s) : Geometry(s)
@@ -41,6 +43,7 @@ void Triangle::commit()
 
   m_index = getParamObject<Array1D>("primitive.index");
   m_vertexPosition = getParamObject<Array1D>("vertex.position");
+  m_vertexNormal = getParamObject<Array1D>("vertex.normal");
 
   if (!m_vertexPosition) {
     reportMessage(ANARI_SEVERITY_WARNING,
@@ -62,6 +65,7 @@ ccl::Geometry *Triangle::makeCyclesGeometry()
 
   setVertices(mesh);
   setIndices(mesh);
+  setNormals(mesh);
   return mesh;
 }
 
@@ -89,6 +93,20 @@ void Triangle::setIndices(ccl::Mesh *mesh)
       mesh->add_triangle(3 * i + 0, 3 * i + 1, 3 * i + 2, 0 /* local shaderID */, true);
     }
   }
+}
+
+void Triangle::setNormals(ccl::Mesh *mesh)
+{
+  if (!m_vertexNormal)
+    return;
+
+  ustring name = ustring("vertex.normal");
+  Attribute *attr = mesh->attributes.add(ATTR_STD_VERTEX_NORMAL, name);
+  float3 *dst = attr->data_float3();
+  std::transform(m_vertexNormal->beginAs<anari_vec::float3>(),
+                 m_vertexNormal->endAs<anari_vec::float3>(),
+                 dst,
+                 [](const anari_vec::float3 &v) { return make_float3(v[0], v[1], v[2]); });
 }
 
 void Triangle::cleanup()
