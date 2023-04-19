@@ -19,9 +19,9 @@ Renderer::~Renderer()
 
 void Renderer::commit()
 {
-  m_backgroundColor = getParam<anari_vec::float4>("backgroundColor", {1.f, 1.f, 1.f, 1.f});
+  m_backgroundColor = getParam<anari_vec::float4>("background", {1.f, 1.f, 1.f, 1.f});
   m_ambientColor = getParam<anari_vec::float3>("ambientColor", {1.f, 1.f, 1.f});
-  m_ambientIntensity = getParam<float>("ambientIntensity", 1.f);
+  m_ambientIntensity = getParam<float>("ambientRadiance", 1.f);
 }
 
 void Renderer::makeRendererCurrent() const

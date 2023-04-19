@@ -46,7 +46,8 @@ Material::~Material()
 
 void Material::commit()
 {
-  auto color = getParam<float3>("color", make_float3(1.f, 1.f, 1.f));
+  auto color = getParam<float3>("color",
+                                getParam<float3>("baseColor", make_float3(1.f, 1.f, 1.f)));
   m_bsdf->input("Base Color")->set(color);
 
   auto opacity = getParam<float>("opacity", 1.f);
