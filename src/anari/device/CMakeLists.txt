@@ -100,5 +100,6 @@ PRIVATE
   cycles_graph
   cycles_util
   extern_sky
+  ${OPENIMAGEIO_LIBRARIES}
   ${LIB}
 )
