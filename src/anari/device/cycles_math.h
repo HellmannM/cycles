@@ -18,12 +18,14 @@ using namespace ccl;
 
 namespace anari_vec {
 
-using float2 = std::array<float, 2>;
-using float3 = std::array<float, 3>;
-using float4 = std::array<float, 4>;
-using uint3 = std::array<uint32_t, 3>;
+using namespace anari::std_types;
 
-}  // namespace anari_math
+using float2 = vec2;
+using float3 = vec3;
+using float4 = vec4;
+using uint3 = uvec3;
+
+}  // namespace anari_vec
 
 // Types //////////////////////////////////////////////////////////////////////
 

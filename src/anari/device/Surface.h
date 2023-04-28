@@ -7,7 +7,6 @@
 #include "Material.h"
 // cycles
 #include "scene/geometry.h"
-#include "scene/object.h"
 
 namespace cycles {
 
@@ -20,8 +19,7 @@ struct Surface : public Object {
   const Geometry *geometry() const;
   const Material *material() const;
 
-  ccl::Geometry *cyclesGeometry() const;
-  ccl::Object *cyclesObject() const;
+  ccl::Geometry *makeCyclesGeometry();
 
   void markCommitted() override;
   bool isValid() const override;
@@ -29,9 +27,6 @@ struct Surface : public Object {
  private:
   helium::IntrusivePtr<Geometry> m_geometry;
   helium::IntrusivePtr<Material> m_material;
-
-  std::unique_ptr<ccl::Geometry> m_cyclesGeometry;
-  std::unique_ptr<ccl::Object> m_cyclesObject;
 };
 
 }  // namespace cycles

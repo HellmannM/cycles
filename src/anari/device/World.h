@@ -3,15 +3,18 @@
 
 #pragma once
 
-#include "Light.h"
-#include "Surface.h"
-#include "array/ObjectArray.h"
+#include "Instance.h"
 
 namespace cycles {
 
 struct World : public Object {
   World(CyclesGlobalState *s);
   ~World() override;
+
+  bool getProperty(const std::string_view &name,
+      ANARIDataType type,
+      void *ptr,
+      uint32_t flags) override;
 
   void commit() override;
 
@@ -22,6 +25,10 @@ struct World : public Object {
 
   helium::IntrusivePtr<ObjectArray> m_zeroSurfaceData;
   helium::IntrusivePtr<ObjectArray> m_zeroLightData;
+  helium::IntrusivePtr<Group> m_zeroGroup;
+  helium::IntrusivePtr<Instance> m_zeroInstance;
+
+  helium::IntrusivePtr<ObjectArray> m_instanceData;
 };
 
 }  // namespace cycles

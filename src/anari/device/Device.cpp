@@ -9,6 +9,7 @@
 #include "anari/ext/debug/DebugObject.h"
 #include "anari/type_utility.h"
 // cycles
+#include "scene/background.h"
 #include "scene/integrator.h"
 
 #include "Frame.h"
@@ -207,21 +208,13 @@ ANARISampler CyclesDevice::newSampler(const char *subtype)
 ANARIGroup CyclesDevice::newGroup()
 {
   initDevice();
-#if 1
-  return createPlaceholderHandle<ANARIGroup>(deviceState());
-#else
   return createObjectForAPI<Group, ANARIGroup>(deviceState());
-#endif
 }
 
 ANARIInstance CyclesDevice::newInstance()
 {
   initDevice();
-#if 1
-  return createPlaceholderHandle<ANARIInstance>(deviceState());
-#else
   return createObjectForAPI<Instance, ANARIInstance>(deviceState());
-#endif
 }
 
 // Top-level Worlds ///////////////////////////////////////////////////////////
@@ -305,8 +298,6 @@ CyclesDevice::~CyclesDevice()
   state.commitBuffer.clear();
 
   // We don't want the ccl::Scene deleting these objects, they are already gone
-  state.scene->geometry.clear();
-  state.scene->objects.clear();
   state.scene->lights.clear();
   state.scene->shaders.clear();
 
@@ -399,9 +390,11 @@ void CyclesDevice::initDevice()
     graph->add(lightPath);
 
     auto *bg = graph->create_node<ccl::BackgroundNode>();
+    bg->name = "background_shader";
     graph->add(bg);
 
     auto *ambient = graph->create_node<ccl::BackgroundNode>();
+    ambient->name = "ambient_shader";
     graph->add(ambient);
 
     state.background = bg;
@@ -413,6 +406,9 @@ void CyclesDevice::initDevice()
     graph->connect(mix->output("Closure"), graph->output()->input("Surface"));
 
     shader->set_graph(graph);
+
+    state.scene->background->set_shader(state.scene->default_background);
+    state.scene->background->set_use_shader(true);
   }
 
   // setup global light shader
@@ -422,7 +418,7 @@ void CyclesDevice::initDevice()
 
     auto *emission = graph->create_node<ccl::EmissionNode>();
     emission->set_color(make_float3(1.f, 1.f, 1.f));
-    emission->set_strength(4.0f);  // to match VisRTX
+    emission->set_strength(1.0f);
     graph->add(emission);
 
     graph->connect(emission->output("Emission"), graph->output()->input("Surface"));
