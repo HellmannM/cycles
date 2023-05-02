@@ -15,6 +15,8 @@ struct Triangle : public Geometry {
 
   ccl::Geometry *makeCyclesGeometry() override;
 
+  box3 bounds() const override;
+
  private:
   void setVertices(ccl::Mesh *mesh);
   void setIndices(ccl::Mesh *mesh);
@@ -67,6 +69,17 @@ ccl::Geometry *Triangle::makeCyclesGeometry()
   setIndices(mesh);
   setNormals(mesh);
   return mesh;
+}
+
+box3 Triangle::bounds() const
+{
+  box3 b = empty_box3();
+  if (!m_vertexPosition)
+    return b;
+  std::for_each(m_vertexPosition->beginAs<anari_vec::float3>(),
+                m_vertexPosition->endAs<anari_vec::float3>(),
+                [&](const anari_vec::float3 &v) { extend(b, make_float3(v[0], v[1], v[2])); });
+  return b;
 }
 
 void Triangle::setVertices(ccl::Mesh *mesh)

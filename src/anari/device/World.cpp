@@ -20,6 +20,9 @@ World::World(CyclesGlobalState *s) : Object(ANARI_WORLD, s)
   // never any public ref to these objects
   m_zeroGroup->refDec(helium::RefType::PUBLIC);
   m_zeroInstance->refDec(helium::RefType::PUBLIC);
+
+  m_zeroGroup->commit();
+  m_zeroInstance->commit();
 }
 
 World::~World()
@@ -34,11 +37,13 @@ bool World::getProperty(const std::string_view &name,
                         uint32_t flags)
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
-    reportMessage(ANARI_SEVERITY_WARNING, "cycles::World returning fixed 'bounds' property");
-    anari_vec::float3 b[2];
-    b[0] = {-1.f, -1.f, -1.f};
-    b[1] = {1.f, 1.f, 1.f};
-    std::memcpy(ptr, &b[0], anari::sizeOf(type));
+    if (flags & ANARI_WAIT)
+      deviceState()->commitBuffer.flush();
+    auto b = bounds();
+    anari_vec::float3 r[2];
+    r[0] = {b.lower.x, b.lower.y, b.lower.z};
+    r[1] = {b.upper.x, b.upper.y, b.upper.z};
+    std::memcpy(ptr, &r[0], anari::sizeOf(type));
     return true;
   }
 
@@ -71,7 +76,6 @@ void World::commit()
     m_zeroGroup->removeParam("light");
 
   m_zeroGroup->commit();
-  m_zeroInstance->commit();
 
   m_instanceData = getParamObject<ObjectArray>("instance");
 
@@ -111,6 +115,23 @@ void World::setWorldObjectsCurrent()
     std::for_each(
         instancesBegin, instancesEnd, [](Instance *i) { i->addInstanceObjectsToCurrentWorld(); });
   }
+}
+
+box3 World::bounds() const
+{
+  box3 b = empty_box3();
+
+  if (m_zeroSurfaceData)
+    extend(b, m_zeroInstance->bounds());
+
+  if (m_instanceData) {
+    auto **instancesBegin = (Instance **)m_instanceData->handlesBegin();
+    auto **instancesEnd = (Instance **)m_instanceData->handlesEnd();
+
+    std::for_each(instancesBegin, instancesEnd, [&](Instance *i) { extend(b, i->bounds()); });
+  }
+
+  return b;
 }
 
 void World::cleanup()

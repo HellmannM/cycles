@@ -42,6 +42,11 @@ void Object::warnIfUnknownObject() const
   // no-op
 }
 
+box3 Object::bounds() const
+{
+  return empty_box3();
+}
+
 CyclesGlobalState *Object::deviceState() const
 {
   return (CyclesGlobalState *)helium::BaseObject::m_state;

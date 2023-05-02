@@ -30,6 +30,8 @@ struct Object : public helium::BaseObject {
   virtual bool isValid() const;
   virtual void warnIfUnknownObject() const;
 
+  virtual box3 bounds() const;
+
   CyclesGlobalState *deviceState() const;
 };
 

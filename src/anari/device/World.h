@@ -20,6 +20,8 @@ struct World : public Object {
 
   void setWorldObjectsCurrent();
 
+  box3 bounds() const override;
+
  private:
   void cleanup();
 

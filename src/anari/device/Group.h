@@ -17,6 +17,8 @@ struct Group : public Object {
 
   void addGroupToCurrentWorld(const ccl::Transform &xfm) const;
 
+  box3 bounds() const override;
+
  private:
   void cleanup();
 

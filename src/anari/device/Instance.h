@@ -13,7 +13,13 @@ struct Instance : public Object {
 
   void commit() override;
 
+  Group *group() const;
+
   void addInstanceObjectsToCurrentWorld();
+
+  box3 bounds() const override;
+
+  bool isValid() const override;
 
  private:
   void cleanup();

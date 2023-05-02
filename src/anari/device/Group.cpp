@@ -72,6 +72,23 @@ void Group::addGroupToCurrentWorld(const ccl::Transform &xfm) const
   }
 }
 
+box3 Group::bounds() const
+{
+  box3 b = empty_box3();
+  if (m_surfaceData) {
+    auto **surfacesBegin = (Surface **)m_surfaceData->handlesBegin();
+    auto **surfacesEnd = (Surface **)m_surfaceData->handlesEnd();
+
+    std::for_each(surfacesBegin, surfacesEnd, [&](Surface *s) {
+      if (s->isValid())
+        extend(b, s->geometry()->bounds());
+      else
+        s->warnIfUnknownObject();
+    });
+  }
+  return b;
+}
+
 void Group::cleanup()
 {
   if (m_surfaceData)
