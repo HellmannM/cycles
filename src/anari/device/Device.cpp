@@ -59,13 +59,6 @@ inline HANDLE_T createObjectForAPI(CyclesGlobalState *s, Args &&...args)
   return getHandleForAPI<HANDLE_T>(new OBJECT_T(s, std::forward<Args>(args)...));
 }
 
-template<typename HANDLE_T, typename... Args>
-inline HANDLE_T createPlaceholderHandle(CyclesGlobalState *s)
-{
-  constexpr ANARIDataType type = anari::ANARITypeFor<HANDLE_T>::value;
-  return (HANDLE_T) new UnknownObject(type, s);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // CyclesDevice definitions ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -170,7 +163,7 @@ ANARIGeometry CyclesDevice::newGeometry(const char *subtype)
 ANARISpatialField CyclesDevice::newSpatialField(const char *subtype)
 {
   initDevice();
-  return createPlaceholderHandle<ANARISpatialField>(deviceState());
+  return (ANARISpatialField) new UnknownObject(ANARI_SPATIAL_FIELD, subtype, deviceState());
 }
 
 ANARISurface CyclesDevice::newSurface()
@@ -182,7 +175,7 @@ ANARISurface CyclesDevice::newSurface()
 ANARIVolume CyclesDevice::newVolume(const char *subtype)
 {
   initDevice();
-  return createPlaceholderHandle<ANARIVolume>(deviceState());
+  return (ANARIVolume) new UnknownObject(ANARI_VOLUME, subtype, deviceState());
 }
 
 // Surface Meta-Data //////////////////////////////////////////////////////////
@@ -197,7 +190,7 @@ ANARISampler CyclesDevice::newSampler(const char *subtype)
 {
   initDevice();
 #if 1
-  return createPlaceholderHandle<ANARISampler>(deviceState());
+  return (ANARISampler) new UnknownObject(ANARI_SAMPLER, subtype, deviceState());
 #else
   return getHandleForAPI<ANARISampler>(Sampler::createInstance(subtype, deviceState()));
 #endif

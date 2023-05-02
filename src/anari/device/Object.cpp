@@ -37,6 +37,11 @@ bool Object::isValid() const
   return true;
 }
 
+void Object::warnIfUnknownObject() const
+{
+  // no-op
+}
+
 CyclesGlobalState *Object::deviceState() const
 {
   return (CyclesGlobalState *)helium::BaseObject::m_state;
@@ -44,9 +49,14 @@ CyclesGlobalState *Object::deviceState() const
 
 // UnknownObject definitions //////////////////////////////////////////////////
 
-UnknownObject::UnknownObject(ANARIDataType type, CyclesGlobalState *s) : Object(type, s)
+UnknownObject::UnknownObject(ANARIDataType type, std::string_view subtype, CyclesGlobalState *s)
+    : Object(type, s), m_subtype(subtype)
 {
   s->objectCounts.unknown++;
+  reportMessage(ANARI_SEVERITY_WARNING,
+                "created unknown %s object of subtype '%s'",
+                anari::toString(type),
+                m_subtype.c_str());
 }
 
 UnknownObject::~UnknownObject()
@@ -57,6 +67,14 @@ UnknownObject::~UnknownObject()
 bool UnknownObject::isValid() const
 {
   return false;
+}
+
+void UnknownObject::warnIfUnknownObject() const
+{
+  reportMessage(ANARI_SEVERITY_WARNING,
+                "encountered unknown %s object of subtype '%s'",
+                anari::toString(type()),
+                m_subtype.c_str());
 }
 
 }  // namespace cycles

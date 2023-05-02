@@ -23,6 +23,7 @@ struct Surface : public Object {
 
   void markCommitted() override;
   bool isValid() const override;
+  void warnIfUnknownObject() const override;
 
  private:
   helium::IntrusivePtr<Geometry> m_geometry;

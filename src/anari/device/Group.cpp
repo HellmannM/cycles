@@ -39,8 +39,11 @@ void Group::addGroupToCurrentWorld(const ccl::Transform &xfm) const
     auto **surfacesEnd = (Surface **)m_surfaceData->handlesEnd();
 
     std::for_each(surfacesBegin, surfacesEnd, [&](Surface *s) {
-      if (!s->isValid())
+      if (!s->isValid()) {
+        s->warnIfUnknownObject();
         return;
+      }
+
       auto *g = s->makeCyclesGeometry();
       g->tag_update(state.scene, true);
       state.scene->geometry.push_back(g);
@@ -57,8 +60,11 @@ void Group::addGroupToCurrentWorld(const ccl::Transform &xfm) const
     auto **lightsEnd = (Light **)m_lightData->handlesEnd();
 
     std::for_each(lightsBegin, lightsEnd, [&](Light *l) {
-      if (!l->isValid())
+      if (!l->isValid()) {
+        l->warnIfUnknownObject();
         return;
+      }
+
       auto *cl = l->cyclesLight();
       state.scene->lights.push_back(cl);
       cl->tag_update(state.scene);

@@ -136,7 +136,7 @@ Geometry *Geometry::createInstance(std::string_view type, CyclesGlobalState *s)
   if (type == "triangle")
     return new Triangle(s);
   else
-    return (Geometry *)new UnknownObject(ANARI_GEOMETRY, s);
+    return (Geometry *)new UnknownObject(ANARI_GEOMETRY, type, s);
 }
 
 void Geometry::markCommitted()

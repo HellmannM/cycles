@@ -50,7 +50,7 @@ Camera *Camera::createInstance(std::string_view type, CyclesGlobalState *s)
   else if (type == "orthographic")
     return new Orthographic(s);
   else
-    return (Camera *)new UnknownObject(ANARI_CAMERA, s);
+    return (Camera *)new UnknownObject(ANARI_CAMERA, type, s);
 }
 
 void Camera::commit()

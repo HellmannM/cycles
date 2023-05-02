@@ -28,6 +28,7 @@ struct Object : public helium::BaseObject {
   // 'true' if the object subtype is both known and has all parameter
   // requirements met
   virtual bool isValid() const;
+  virtual void warnIfUnknownObject() const;
 
   CyclesGlobalState *deviceState() const;
 };
@@ -35,9 +36,13 @@ struct Object : public helium::BaseObject {
 // This type is used to represent object subtypes that are not known by Cycles,
 // so it is always invalid.
 struct UnknownObject : public Object {
-  UnknownObject(ANARIDataType type, CyclesGlobalState *s);
+  UnknownObject(ANARIDataType type, std::string_view subtype, CyclesGlobalState *s);
   ~UnknownObject() override;
   bool isValid() const override;
+  void warnIfUnknownObject() const override;
+
+ private:
+  std::string m_subtype;
 };
 
 }  // namespace cycles

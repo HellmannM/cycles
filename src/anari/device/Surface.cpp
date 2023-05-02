@@ -57,7 +57,15 @@ void Surface::markCommitted()
 
 bool Surface::isValid() const
 {
-  return m_geometry && m_geometry->isValid();
+  return m_geometry && m_geometry->isValid() && m_material && m_material->isValid();
+}
+
+void Surface::warnIfUnknownObject() const
+{
+  if (m_geometry)
+    m_geometry->warnIfUnknownObject();
+  if (m_material)
+    m_material->warnIfUnknownObject();
 }
 
 }  // namespace cycles
