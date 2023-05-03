@@ -20,7 +20,11 @@ struct Material : public Object {
 
  private:
   ccl::Shader m_shader;
-  ccl::PrincipledBsdfNode *m_bsdf{nullptr};
+  ccl::ShaderGraph *m_graph{nullptr};
+  struct Nodes {
+    ccl::PrincipledBsdfNode *bsdf{nullptr};
+    ccl::AttributeNode *colorAttr{nullptr};
+  } m_nodes;
 };
 
 }  // namespace cycles
