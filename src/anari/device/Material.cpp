@@ -5,58 +5,26 @@
 
 namespace cycles {
 
+// MatteMaterial definitions //////////////////////////////////////////////////
+
 struct MatteMaterial : public Material {
   MatteMaterial(CyclesGlobalState *s);
   ~MatteMaterial() override = default;
   void commit() override;
 
  private:
-  ccl::ShaderGraph *m_graph{nullptr};
-  struct Nodes {
-    ccl::DiffuseBsdfNode *bsdf{nullptr};
-    ccl::AttributeNode *colorAttr{nullptr};
-  } m_nodes;
+  ccl::DiffuseBsdfNode *m_bsdf{nullptr};
 };
 
 MatteMaterial::MatteMaterial(CyclesGlobalState *s) : Material(s)
 {
-  auto *graph = new ccl::ShaderGraph();
-
-  auto *vertexColor = graph->create_node<ccl::AttributeNode>();
-  vertexColor->set_attribute(ccl::ustring("vertex.color"));
-  graph->add(vertexColor);
-
-  auto *attr0 = graph->create_node<ccl::AttributeNode>();
-  attr0->set_attribute(ccl::ustring("vertex.attribute0"));
-  graph->add(attr0);
-
-  auto *attr1 = graph->create_node<ccl::AttributeNode>();
-  attr1->set_attribute(ccl::ustring("vertex.attribute1"));
-  graph->add(attr1);
-
-  auto *attr2 = graph->create_node<ccl::AttributeNode>();
-  attr2->set_attribute(ccl::ustring("vertex.attribute2"));
-  graph->add(attr2);
-
-  auto *attr3 = graph->create_node<ccl::AttributeNode>();
-  attr3->set_attribute(ccl::ustring("vertex.attribute3"));
-  graph->add(attr3);
-
   auto *bsdf = new ccl::DiffuseBsdfNode();
-  bsdf->set_owner(graph);
-  graph->add(bsdf);
+  bsdf->set_owner(m_graph);
+  m_graph->add(bsdf);
 
-  ccl::ShaderOutput *output = bsdf->output("BSDF");
-  ccl::ShaderInput *input = graph->output()->input("Surface");
+  m_graph->connect(bsdf->output("BSDF"), m_graph->output()->input("Surface"));
 
-  if (output && input)
-    graph->connect(output, input);
-
-  m_shader.set_graph(graph);
-
-  m_graph = graph;
-  m_nodes.bsdf = bsdf;
-  m_nodes.colorAttr = vertexColor;
+  m_bsdf = bsdf;
 }
 
 void MatteMaterial::commit()
@@ -64,12 +32,7 @@ void MatteMaterial::commit()
   auto colorMode = getParamString("color", "");
   auto color = getParam<float3>("color", make_float3(1.f, 1.f, 1.f));
 
-  if (colorMode == "color")
-    m_graph->connect(m_nodes.colorAttr->output("Color"), m_nodes.bsdf->input("Color"));
-  else {
-    m_graph->disconnect(m_nodes.bsdf->input("Color"));
-    m_nodes.bsdf->input("Color")->set(color);
-  }
+  connectAttributes(m_bsdf, colorMode, "Color", color, false);
 
   m_shader.tag_update(deviceState()->scene);
 }
@@ -82,76 +45,46 @@ struct PhysicallyBasedMaterial : public Material {
   void commit() override;
 
  private:
-  ccl::ShaderGraph *m_graph{nullptr};
-  struct Nodes {
-    ccl::PrincipledBsdfNode *bsdf{nullptr};
-    ccl::AttributeNode *colorAttr{nullptr};
-  } m_nodes;
+  ccl::PrincipledBsdfNode *m_bsdf{nullptr};
 };
 
 PhysicallyBasedMaterial::PhysicallyBasedMaterial(CyclesGlobalState *s) : Material(s)
 {
-  auto *graph = new ccl::ShaderGraph();
-
-  auto *vertexColor = graph->create_node<ccl::AttributeNode>();
-  vertexColor->set_attribute(ccl::ustring("vertex.color"));
-  graph->add(vertexColor);
-
-  auto *attr0 = graph->create_node<ccl::AttributeNode>();
-  attr0->set_attribute(ccl::ustring("vertex.attribute0"));
-  graph->add(attr0);
-
-  auto *attr1 = graph->create_node<ccl::AttributeNode>();
-  attr1->set_attribute(ccl::ustring("vertex.attribute1"));
-  graph->add(attr1);
-
-  auto *attr2 = graph->create_node<ccl::AttributeNode>();
-  attr2->set_attribute(ccl::ustring("vertex.attribute2"));
-  graph->add(attr2);
-
-  auto *attr3 = graph->create_node<ccl::AttributeNode>();
-  attr3->set_attribute(ccl::ustring("vertex.attribute3"));
-  graph->add(attr3);
-
   auto *bsdf = new ccl::PrincipledBsdfNode();
-  bsdf->set_owner(graph);
-  bsdf->input("Clearcoat Roughness")->set(1.f);
-  graph->add(bsdf);
+  bsdf->set_owner(m_graph);
+  bsdf->input("Subsurface")->set(0.f);
+  bsdf->input("Clearcoat")->set(0.f);
+  bsdf->input("Clearcoat Roughness")->set(0.f);
+  bsdf->input("IOR")->set(1.5f);
+  bsdf->input("Transmission")->set(0.0f);
+  m_graph->add(bsdf);
 
-  ccl::ShaderOutput *output = bsdf->output("BSDF");
-  ccl::ShaderInput *input = graph->output()->input("Surface");
+  m_graph->connect(bsdf->output("BSDF"), m_graph->output()->input("Surface"));
 
-  if (output && input)
-    graph->connect(output, input);
-
-  m_shader.set_graph(graph);
-
-  m_graph = graph;
-  m_nodes.bsdf = bsdf;
-  m_nodes.colorAttr = vertexColor;
+  m_bsdf = bsdf;
 }
 
 void PhysicallyBasedMaterial::commit()
 {
-  auto colorMode = getParamString("color", getParamString("baseColor", ""));
-  auto color = getParam<float3>("color",
-                                getParam<float3>("baseColor", make_float3(1.f, 1.f, 1.f)));
+  auto colorMode = getParamString("baseColor", "");
+  auto color = getParam<float3>("baseColor", make_float3(1.f, 1.f, 1.f));
+  connectAttributes(m_bsdf, colorMode, "Base Color", color, false);
 
-  if (colorMode == "color")
-    m_graph->connect(m_nodes.colorAttr->output("Color"), m_nodes.bsdf->input("Base Color"));
-  else {
-    m_graph->disconnect(m_nodes.bsdf->input("Base Color"));
-    m_nodes.bsdf->input("Base Color")->set(color);
-  }
-
+  auto opacityMode = getParamString("opacity", "");
   auto opacity = getParam<float>("opacity", 1.f);
-  m_nodes.bsdf->input("Alpha")->set(opacity);
+  connectAttributes(m_bsdf, opacityMode, "Alpha", make_float3(opacity));
 
+  auto specularMode = getParamString("specular", "");
   auto specular = getParam<float>("specular", 1.f);
-  m_nodes.bsdf->input("Specular")->set(specular);
+  connectAttributes(m_bsdf, specularMode, "Specular", make_float3(specular));
 
+  auto roughnessMode = getParamString("roughness", "");
   auto roughness = getParam<float>("roughness", 1.f);
-  m_nodes.bsdf->input("Roughness")->set(roughness);
+  connectAttributes(m_bsdf, roughnessMode, "Roughness", make_float3(roughness));
+
+  auto metallicMode = getParamString("metallic", "");
+  auto metallic = getParam<float>("metallic", 1.f);
+  connectAttributes(m_bsdf, metallicMode, "Metallic", make_float3(metallic));
 
   m_shader.tag_update(deviceState()->scene);
 }
@@ -163,6 +96,61 @@ Material::Material(CyclesGlobalState *s) : Object(ANARI_SURFACE, s)
   auto &state = *deviceState();
   state.objectCounts.materials++;
   state.scene->shaders.push_back(&m_shader);
+
+  m_graph = new ccl::ShaderGraph();
+
+  auto *vertexColor = m_graph->create_node<ccl::AttributeNode>();
+  vertexColor->set_attribute(ccl::ustring("vertex.color"));
+  m_graph->add(vertexColor);
+
+  auto *attr0 = m_graph->create_node<ccl::AttributeNode>();
+  attr0->set_attribute(ccl::ustring("vertex.attribute0"));
+  m_graph->add(attr0);
+
+  auto *attr1 = m_graph->create_node<ccl::AttributeNode>();
+  attr1->set_attribute(ccl::ustring("vertex.attribute1"));
+  m_graph->add(attr1);
+
+  auto *attr2 = m_graph->create_node<ccl::AttributeNode>();
+  attr2->set_attribute(ccl::ustring("vertex.attribute2"));
+  m_graph->add(attr2);
+
+  auto *attr3 = m_graph->create_node<ccl::AttributeNode>();
+  attr3->set_attribute(ccl::ustring("vertex.attribute3"));
+  m_graph->add(attr3);
+
+  auto *vertexColor_sc = m_graph->create_node<ccl::SeparateColorNode>();
+  m_graph->add(vertexColor_sc);
+  m_graph->connect(vertexColor->output("Color"), vertexColor_sc->input("Color"));
+
+  auto *attr0_sc = m_graph->create_node<ccl::SeparateColorNode>();
+  m_graph->add(attr0_sc);
+  m_graph->connect(attr0->output("Color"), attr0_sc->input("Color"));
+
+  auto *attr1_sc = m_graph->create_node<ccl::SeparateColorNode>();
+  m_graph->add(attr1_sc);
+  m_graph->connect(attr1->output("Color"), attr1_sc->input("Color"));
+
+  auto *attr2_sc = m_graph->create_node<ccl::SeparateColorNode>();
+  m_graph->add(attr2_sc);
+  m_graph->connect(attr2->output("Color"), attr2_sc->input("Color"));
+
+  auto *attr3_sc = m_graph->create_node<ccl::SeparateColorNode>();
+  m_graph->add(attr3_sc);
+  m_graph->connect(attr3->output("Color"), attr3_sc->input("Color"));
+
+  m_shader.set_graph(m_graph);
+
+  m_attributeNodes.attrC = vertexColor;
+  m_attributeNodes.attr0 = attr0;
+  m_attributeNodes.attr1 = attr1;
+  m_attributeNodes.attr2 = attr2;
+  m_attributeNodes.attr3 = attr3;
+  m_attributeNodes.attrC_sc = vertexColor_sc;
+  m_attributeNodes.attr0_sc = attr0_sc;
+  m_attributeNodes.attr1_sc = attr1_sc;
+  m_attributeNodes.attr2_sc = attr2_sc;
+  m_attributeNodes.attr3_sc = attr3_sc;
 }
 
 Material::~Material()
@@ -181,6 +169,46 @@ Material *Material::createInstance(std::string_view type, CyclesGlobalState *s)
     return new PhysicallyBasedMaterial(s);
   else
     return (Material *)new UnknownObject(ANARI_MATERIAL, type, s);
+}
+
+void Material::connectAttributes(ccl::ShaderNode *bsdf,
+                                 const std::string &mode,
+                                 const char *input,
+                                 const float3 &v,
+                                 bool singleComponent)
+{
+  if (mode == "color") {
+    m_graph->connect(singleComponent ? m_attributeNodes.attrC_sc->output("Red") :
+                                       m_attributeNodes.attrC->output("Color"),
+                     bsdf->input(input));
+  }
+  else if (mode == "attribute0") {
+    m_graph->connect(singleComponent ? m_attributeNodes.attr0_sc->output("Red") :
+                                       m_attributeNodes.attr0->output("Color"),
+                     bsdf->input(input));
+  }
+  else if (mode == "attribute1") {
+    m_graph->connect(singleComponent ? m_attributeNodes.attr1_sc->output("Red") :
+                                       m_attributeNodes.attr1->output("Color"),
+                     bsdf->input(input));
+  }
+  else if (mode == "attribute2") {
+    m_graph->connect(singleComponent ? m_attributeNodes.attr2_sc->output("Red") :
+                                       m_attributeNodes.attr2->output("Color"),
+                     bsdf->input(input));
+  }
+  else if (mode == "attribute3") {
+    m_graph->connect(singleComponent ? m_attributeNodes.attr3_sc->output("Red") :
+                                       m_attributeNodes.attr3->output("Color"),
+                     bsdf->input(input));
+  }
+  else {
+    m_graph->disconnect(bsdf->input(input));
+    if (singleComponent)
+      bsdf->input(input)->set(v.x);
+    else
+      bsdf->input(input)->set(v);
+  }
 }
 
 ccl::Shader *Material::cyclesShader()

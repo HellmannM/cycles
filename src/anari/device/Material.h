@@ -20,7 +20,26 @@ struct Material : public Object {
   ccl::Shader *cyclesShader();
 
  protected:
+  void connectAttributes(ccl::ShaderNode *bsdf,
+                         const std::string &mode,
+                         const char *input,
+                         const float3 &v,
+                         bool singleComponent = true);
+
   ccl::Shader m_shader;
+  ccl::ShaderGraph *m_graph{nullptr};
+  struct Nodes {
+    ccl::AttributeNode *attrC{nullptr};
+    ccl::AttributeNode *attr0{nullptr};
+    ccl::AttributeNode *attr1{nullptr};
+    ccl::AttributeNode *attr2{nullptr};
+    ccl::AttributeNode *attr3{nullptr};
+    ccl::SeparateColorNode *attrC_sc{nullptr};
+    ccl::SeparateColorNode *attr0_sc{nullptr};
+    ccl::SeparateColorNode *attr1_sc{nullptr};
+    ccl::SeparateColorNode *attr2_sc{nullptr};
+    ccl::SeparateColorNode *attr3_sc{nullptr};
+  } m_attributeNodes;
 };
 
 }  // namespace cycles
