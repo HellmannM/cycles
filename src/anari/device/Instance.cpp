@@ -28,7 +28,15 @@ void Instance::commit()
 
   auto xfm = getParam<anari_vec::mat4>("transform", defaultXfm);
 
-  std::memcpy(&m_xfm, &xfm, sizeof(m_xfm));
+  m_xfm.x.x = xfm[0][0];
+  m_xfm.x.y = xfm[1][0];
+  m_xfm.x.z = xfm[2][0];
+  m_xfm.y.x = xfm[0][1];
+  m_xfm.y.y = xfm[1][1];
+  m_xfm.y.z = xfm[2][1];
+  m_xfm.z.x = xfm[0][2];
+  m_xfm.z.y = xfm[1][2];
+  m_xfm.z.z = xfm[2][2];
   m_xfm.x.w = xfm[3][0];
   m_xfm.y.w = xfm[3][1];
   m_xfm.z.w = xfm[3][2];
