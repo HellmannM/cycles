@@ -4,6 +4,7 @@
 #include "Geometry.h"
 // cycles
 #include "scene/mesh.h"
+#include "scene/pointcloud.h"
 
 namespace cycles {
 
@@ -21,7 +22,7 @@ template<int T> struct convert_toFloat4 {
   }
 };
 
-// Geometry definitions ///////////////////////////////////////////////////////
+// Triangle definitions ///////////////////////////////////////////////////////
 
 struct Triangle : public Geometry {
   Triangle(CyclesGlobalState *s);
@@ -205,6 +206,234 @@ void Triangle::cleanup()
     m_vertexPosition->removeCommitObserver(this);
 }
 
+// Sphere definitions /////////////////////////////////////////////////////////
+
+struct Sphere : public Geometry {
+  Sphere(CyclesGlobalState *s);
+  ~Sphere() override;
+
+  void commit() override;
+
+  ccl::Geometry *makeCyclesGeometry() override;
+
+  box3 bounds() const override;
+
+ private:
+  void setSpheres(ccl::PointCloud *pc);
+  void setAttributes(ccl::PointCloud *pc);
+  void cleanup();
+
+  helium::IntrusivePtr<Array1D> m_index;
+  helium::IntrusivePtr<Array1D> m_vertexPosition;
+  helium::IntrusivePtr<Array1D> m_vertexColor;
+  helium::IntrusivePtr<Array1D> m_vertexAttribute0;
+  helium::IntrusivePtr<Array1D> m_vertexAttribute1;
+  helium::IntrusivePtr<Array1D> m_vertexAttribute2;
+  helium::IntrusivePtr<Array1D> m_vertexAttribute3;
+  helium::IntrusivePtr<Array1D> m_vertexRadius;
+  float m_radius{1.f};
+};
+
+Sphere::Sphere(CyclesGlobalState *s) : Geometry(s)
+{
+}
+
+Sphere::~Sphere()
+{
+  cleanup();
+}
+
+void Sphere::commit()
+{
+  Geometry::commit();
+
+  cleanup();
+
+  m_index = getParamObject<Array1D>("primitive.index");
+  m_vertexPosition = getParamObject<Array1D>("vertex.position");
+  m_vertexColor = getParamObject<Array1D>("vertex.color");
+  m_vertexAttribute0 = getParamObject<Array1D>("vertex.attribute0");
+  m_vertexAttribute1 = getParamObject<Array1D>("vertex.attribute1");
+  m_vertexAttribute2 = getParamObject<Array1D>("vertex.attribute2");
+  m_vertexAttribute3 = getParamObject<Array1D>("vertex.attribute3");
+  m_vertexRadius = getParamObject<Array1D>("vertex.radius");
+  m_radius = getParam<float>("radius", 1.f);
+
+  if (!m_vertexPosition) {
+    reportMessage(ANARI_SEVERITY_WARNING,
+                  "missing required parameter 'vertex.position' on triangle geometry");
+    return;
+  }
+
+  m_vertexPosition->addCommitObserver(this);
+  if (m_index)
+    m_index->addCommitObserver(this);
+}
+
+ccl::Geometry *Sphere::makeCyclesGeometry()
+{
+  auto *pc = new ccl::PointCloud();
+
+  if (!m_vertexPosition)
+    reportMessage(ANARI_SEVERITY_WARNING, "detected incomplete geometry");
+
+  setSpheres(pc);
+  setAttributes(pc);
+  return pc;
+}
+
+box3 Sphere::bounds() const
+{
+  box3 b = empty_box3();
+  if (!m_vertexPosition)
+    return b;
+  std::for_each(m_vertexPosition->beginAs<anari_vec::float3>(),
+                m_vertexPosition->endAs<anari_vec::float3>(),
+                [&](const anari_vec::float3 &v) { extend(b, make_float3(v[0], v[1], v[2])); });
+  return b;
+}
+
+void Sphere::setSpheres(ccl::PointCloud *pc)
+{
+  ccl::array<ccl::float3> points;
+  ccl::array<float> radius;
+  ccl::array<int> shader;
+
+  size_t numSpheres = m_index ? m_index->size() : m_vertexPosition->size();
+
+  auto *dstPoint = (ccl::float3 *)points.resize(numSpheres);
+  auto *dstRadius = (float *)radius.resize(numSpheres);
+  auto *dstShader = (int *)shader.resize(numSpheres);
+
+  auto *srcPoint = m_vertexPosition->beginAs<anari_vec::float3>();
+  float *srcRadius = nullptr;
+  if (m_vertexRadius)
+    m_vertexRadius->beginAs<float>();
+
+  uint32_t *srcIdx = nullptr;
+  if (m_index)
+    srcIdx = m_index->beginAs<uint32_t>();
+
+  for (size_t i = 0; i < numSpheres; i++) {
+    size_t idx = srcIdx ? size_t(srcIdx[i]) : i;
+    const auto &pt = srcPoint[idx];
+    dstPoint[i] = make_float3(pt[0], pt[1], pt[2]);
+    dstRadius[i] = srcRadius ? srcRadius[idx] : m_radius;
+    dstShader[i] = 0;
+  }
+
+  pc->set_points(points);
+  pc->set_radius(radius);
+  pc->set_shader(shader);
+}
+
+void Sphere::setAttributes(ccl::PointCloud *pc)
+{
+  float3 *dstC = nullptr;
+  float3 *dst0 = nullptr;
+  float3 *dst1 = nullptr;
+  float3 *dst2 = nullptr;
+  float3 *dst3 = nullptr;
+
+  void *srcC = nullptr;
+  void *src0 = nullptr;
+  void *src1 = nullptr;
+  void *src2 = nullptr;
+  void *src3 = nullptr;
+
+  anari::DataType srcTC = ANARI_UNKNOWN;
+  anari::DataType srcT0 = ANARI_UNKNOWN;
+  anari::DataType srcT1 = ANARI_UNKNOWN;
+  anari::DataType srcT2 = ANARI_UNKNOWN;
+  anari::DataType srcT3 = ANARI_UNKNOWN;
+
+  size_t numSpheres = m_index ? m_index->size() : m_vertexPosition->size();
+
+  if (m_vertexColor) {
+    Attribute *attr = pc->attributes.add(
+        ustring("vertex.color"), TypeDesc::TypeColor, ATTR_ELEMENT_VERTEX);
+    attr->std = ATTR_STD_VERTEX_COLOR;
+    dstC = attr->data_float3();
+    srcC = m_vertexColor->data();
+    srcTC = m_vertexColor->elementType();
+  }
+
+  if (m_vertexAttribute0) {
+    Attribute *attr = pc->attributes.add(
+        ustring("vertex.attribute0"), TypeDesc::TypeColor, ATTR_ELEMENT_VERTEX);
+    attr->std = ATTR_STD_VERTEX_COLOR;
+    dst0 = attr->data_float3();
+    src0 = m_vertexAttribute0->data();
+    srcT0 = m_vertexAttribute0->elementType();
+  }
+
+  if (m_vertexAttribute1) {
+    Attribute *attr = pc->attributes.add(
+        ustring("vertex.attribute1"), TypeDesc::TypeColor, ATTR_ELEMENT_VERTEX);
+    attr->std = ATTR_STD_VERTEX_COLOR;
+    dst1 = attr->data_float3();
+    src1 = m_vertexAttribute1->data();
+    srcT1 = m_vertexAttribute1->elementType();
+  }
+
+  if (m_vertexAttribute2) {
+    Attribute *attr = pc->attributes.add(
+        ustring("vertex.attribute2"), TypeDesc::TypeColor, ATTR_ELEMENT_VERTEX);
+    attr->std = ATTR_STD_VERTEX_COLOR;
+    dst2 = attr->data_float3();
+    src2 = m_vertexAttribute2->data();
+    srcT2 = m_vertexAttribute2->elementType();
+  }
+
+  if (m_vertexAttribute3) {
+    Attribute *attr = pc->attributes.add(
+        ustring("vertex.attribute3"), TypeDesc::TypeColor, ATTR_ELEMENT_VERTEX);
+    attr->std = ATTR_STD_VERTEX_COLOR;
+    dst3 = attr->data_float3();
+    src3 = m_vertexAttribute3->data();
+    srcT3 = m_vertexAttribute3->elementType();
+  }
+
+  uint32_t *srcIdx = nullptr;
+  if (m_index)
+    srcIdx = m_index->beginAs<uint32_t>();
+  for (size_t i = 0; i < numSpheres; i++) {
+    size_t idx = srcIdx ? size_t(srcIdx[i]) : i;
+    if (dstC) {
+      auto c = anari::anariTypeInvoke<anari_vec::float4, convert_toFloat4>(srcTC, srcC, idx);
+      dstC[i] = make_float3(c[0], c[1], c[2]);
+    }
+
+    if (dst0) {
+      auto c = anari::anariTypeInvoke<anari_vec::float4, convert_toFloat4>(srcT0, src0, idx);
+      dst0[i] = make_float3(c[0], c[1], c[2]);
+    }
+
+    if (dst1) {
+      auto c = anari::anariTypeInvoke<anari_vec::float4, convert_toFloat4>(srcT1, src1, idx);
+      dst1[i] = make_float3(c[0], c[1], c[2]);
+    }
+
+    if (dst2) {
+      auto c = anari::anariTypeInvoke<anari_vec::float4, convert_toFloat4>(srcT2, src2, idx);
+      dst2[i] = make_float3(c[0], c[1], c[2]);
+    }
+
+    if (dst3) {
+      auto c = anari::anariTypeInvoke<anari_vec::float4, convert_toFloat4>(srcT3, src3, idx);
+      dst3[i] = make_float3(c[0], c[1], c[2]);
+    }
+  }
+}
+
+void Sphere::cleanup()
+{
+  if (m_index)
+    m_index->removeCommitObserver(this);
+  if (m_vertexPosition)
+    m_vertexPosition->removeCommitObserver(this);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Geometry definitions ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -223,6 +452,8 @@ Geometry *Geometry::createInstance(std::string_view type, CyclesGlobalState *s)
 {
   if (type == "triangle")
     return new Triangle(s);
+  else if (type == "sphere")
+    return new Sphere(s);
   else
     return (Geometry *)new UnknownObject(ANARI_GEOMETRY, type, s);
 }
