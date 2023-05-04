@@ -46,7 +46,7 @@ Light *Light::createInstance(std::string_view type, CyclesGlobalState *s)
   if (type == "directional")
     return new Directional(s);
   else
-    return (Light *)new UnknownObject(ANARI_CAMERA, type, s);
+    return (Light *)new UnknownObject(ANARI_LIGHT, type, s);
 }
 
 void Light::commit()
