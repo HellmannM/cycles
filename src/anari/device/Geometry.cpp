@@ -308,7 +308,7 @@ void Sphere::setSpheres(ccl::PointCloud *pc)
   auto *srcPoint = m_vertexPosition->beginAs<anari_vec::float3>();
   float *srcRadius = nullptr;
   if (m_vertexRadius)
-    m_vertexRadius->beginAs<float>();
+    srcRadius = m_vertexRadius->beginAs<float>();
 
   uint32_t *srcIdx = nullptr;
   if (m_index)
