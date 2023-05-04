@@ -166,42 +166,6 @@ void Triangle::setVertexColor(ccl::Mesh *mesh)
   const void *src = array->data();
   anari::DataType type = array->elementType();
 
-#if 0  // bespoke cycles face-varying version
-  Attribute *attr = mesh->attributes.add(ATTR_STD_VERTEX_COLOR, ustring("vertex.color"));
-  uchar4 *dst = attr->data_uchar4();
-  const uint32_t numTriangles = m_index ? m_index->size() : m_vertexPosition->size() / 3;
-  for (uint32_t i = 0; i < numTriangles; i++) {
-    auto i0 = 3 * i + 0;
-    auto i1 = 3 * i + 1;
-    auto i2 = 3 * i + 2;
-    auto di0 = i0;
-    auto di1 = i1;
-    auto di2 = i2;
-    if (m_index) {
-      auto *idxs = m_index->beginAs<anari_vec::uint3>();
-      i0 = idxs[i][0];
-      i1 = idxs[i][1];
-      i2 = idxs[i][2];
-    }
-
-    auto toUchar4 = [](const anari_vec::float4 &v) {
-      uchar4 r;
-      r.x = uint8_t(v[0] * 255);
-      r.y = uint8_t(v[1] * 255);
-      r.z = uint8_t(v[2] * 255);
-      r.w = uint8_t(v[3] * 255);
-      return r;
-    };
-
-    auto c0 = anariTypeInvokeColors<anari_vec::float4, convert_toFloat4>(type, src, i0);
-    auto c1 = anariTypeInvokeColors<anari_vec::float4, convert_toFloat4>(type, src, i1);
-    auto c2 = anariTypeInvokeColors<anari_vec::float4, convert_toFloat4>(type, src, i2);
-
-    dst[di0] = toUchar4(c0);
-    dst[di1] = toUchar4(c1);
-    dst[di2] = toUchar4(c2);
-  }
-#else  // true per-vertex
   Attribute *attr = mesh->attributes.add(
       ustring("vertex.color"), TypeDesc::TypeColor, ATTR_ELEMENT_VERTEX);
   attr->std = ATTR_STD_VERTEX_COLOR;
@@ -210,7 +174,6 @@ void Triangle::setVertexColor(ccl::Mesh *mesh)
     auto c = anari::anariTypeInvoke<anari_vec::float4, convert_toFloat4>(type, src, i);
     dst[i] = make_float3(c[0], c[1], c[2]);
   }
-#endif
 }
 
 void Triangle::setVertexAttribute(ccl::Mesh *mesh,
