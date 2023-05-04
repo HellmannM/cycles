@@ -180,10 +180,10 @@ ANARIVolume CyclesDevice::newVolume(const char *subtype)
 
 // Surface Meta-Data //////////////////////////////////////////////////////////
 
-ANARIMaterial CyclesDevice::newMaterial(const char * /*subtype*/)
+ANARIMaterial CyclesDevice::newMaterial(const char *subtype)
 {
   initDevice();
-  return createObjectForAPI<Material, ANARIMaterial>(deviceState());
+  return getHandleForAPI<ANARIMaterial>(Material::createInstance(subtype, deviceState()));
 }
 
 ANARISampler CyclesDevice::newSampler(const char *subtype)
@@ -411,7 +411,7 @@ void CyclesDevice::initDevice()
 
     auto *emission = graph->create_node<ccl::EmissionNode>();
     emission->set_color(make_float3(1.f, 1.f, 1.f));
-    emission->set_strength(1.0f);
+    emission->set_strength(4.0f); // to match VisRTX
     graph->add(emission);
 
     graph->connect(emission->output("Emission"), graph->output()->input("Surface"));
