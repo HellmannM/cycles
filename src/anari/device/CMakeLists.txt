@@ -9,7 +9,7 @@ project(anari_library_cycles LANGUAGES CXX)
 
 ## Dependencies ##
 
-find_package(anari 0.3.0 REQUIRED)
+find_package(anari 0.4.0 REQUIRED)
 
 ## Code generation
 

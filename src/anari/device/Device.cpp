@@ -5,9 +5,9 @@
 
 #include "Device.h"
 // anari
+#include "anari/anari_cpp.hpp"
 #include "anari/backend/LibraryImpl.h"
 #include "anari/ext/debug/DebugObject.h"
-#include "anari/type_utility.h"
 // cycles
 #include "scene/background.h"
 #include "scene/integrator.h"
@@ -411,7 +411,7 @@ void CyclesDevice::initDevice()
 
     auto *emission = graph->create_node<ccl::EmissionNode>();
     emission->set_color(make_float3(1.f, 1.f, 1.f));
-    emission->set_strength(4.0f); // to match VisRTX
+    emission->set_strength(4.0f);  // to match VisRTX
     graph->add(emission);
 
     graph->connect(emission->output("Emission"), graph->output()->input("Surface"));
