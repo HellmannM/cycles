@@ -79,8 +79,9 @@ int main(int argc, const char **argv)
   if (!lib)
     return 1;
 
-  anari::Features features = anari::feature::getObjectFeatures(
-      lib, "default", "default", ANARI_DEVICE);
+  auto d = anari::newDevice(lib, "default");
+
+  anari::Features features = anari::feature::getObjectFeatureStruct(d, ANARI_DEVICE, "default");
 
   if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
@@ -90,8 +91,6 @@ int main(int argc, const char **argv)
     printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
   if (!features.ANARI_KHR_MATERIAL_MATTE)
     printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
-
-  auto d = anari::newDevice(lib, "default");
 
   if (!d) {
     printf("\n\nERROR: could not load default device in library %s\n", g_libraryName);
@@ -152,13 +151,14 @@ int main(int argc, const char **argv)
   box3 worldBounds;
   if (anari::getProperty(d, world, "bounds", worldBounds, ANARI_WAIT)) {
     printf("\nworld bounds: ({%f, %f, %f}, {%f, %f, %f}\n\n",
-        worldBounds[0][0],
-        worldBounds[0][1],
-        worldBounds[0][2],
-        worldBounds[1][0],
-        worldBounds[1][1],
-        worldBounds[1][2]);
-  } else {
+           worldBounds[0][0],
+           worldBounds[0][1],
+           worldBounds[0][2],
+           worldBounds[1][0],
+           worldBounds[1][1],
+           worldBounds[1][2]);
+  }
+  else {
     printf("\nworld bounds not returned\n\n");
   }
 

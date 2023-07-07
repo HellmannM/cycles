@@ -69,8 +69,7 @@ ANARIArray1D CyclesDevice::newArray1D(const void *appMemory,
                                       ANARIMemoryDeleter deleter,
                                       const void *userData,
                                       ANARIDataType type,
-                                      uint64_t numItems,
-                                      uint64_t byteStride)
+                                      uint64_t numItems)
 {
   initDevice();
 
@@ -80,7 +79,6 @@ ANARIArray1D CyclesDevice::newArray1D(const void *appMemory,
   md.deleterPtr = userData;
   md.elementType = type;
   md.numItems = numItems;
-  md.byteStride = byteStride;
 
   if (anari::isObject(type))
     return createObjectForAPI<ObjectArray, ANARIArray1D>(deviceState(), md);
@@ -93,9 +91,7 @@ ANARIArray2D CyclesDevice::newArray2D(const void *appMemory,
                                       const void *userData,
                                       ANARIDataType type,
                                       uint64_t numItems1,
-                                      uint64_t numItems2,
-                                      uint64_t byteStride1,
-                                      uint64_t byteStride2)
+                                      uint64_t numItems2)
 {
   initDevice();
 
@@ -106,8 +102,6 @@ ANARIArray2D CyclesDevice::newArray2D(const void *appMemory,
   md.elementType = type;
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
-  md.byteStride1 = byteStride1;
-  md.byteStride2 = byteStride2;
 
   return createObjectForAPI<Array2D, ANARIArray2D>(deviceState(), md);
 }
@@ -118,10 +112,7 @@ ANARIArray3D CyclesDevice::newArray3D(const void *appMemory,
                                       ANARIDataType type,
                                       uint64_t numItems1,
                                       uint64_t numItems2,
-                                      uint64_t numItems3,
-                                      uint64_t byteStride1,
-                                      uint64_t byteStride2,
-                                      uint64_t byteStride3)
+                                      uint64_t numItems3)
 {
   initDevice();
 
@@ -133,9 +124,6 @@ ANARIArray3D CyclesDevice::newArray3D(const void *appMemory,
   md.numItems1 = numItems1;
   md.numItems2 = numItems2;
   md.numItems3 = numItems3;
-  md.byteStride1 = byteStride1;
-  md.byteStride2 = byteStride2;
-  md.byteStride3 = byteStride3;
 
   return createObjectForAPI<Array3D, ANARIArray3D>(deviceState(), md);
 }
@@ -216,6 +204,32 @@ ANARIWorld CyclesDevice::newWorld()
 {
   initDevice();
   return createObjectForAPI<World, ANARIWorld>(deviceState());
+}
+
+// Query functions ////////////////////////////////////////////////////////////
+
+const char **CyclesDevice::getObjectSubtypes(ANARIDataType objectType)
+{
+  return cycles::query_object_types(objectType);
+}
+
+const void *CyclesDevice::getObjectInfo(ANARIDataType objectType,
+                                        const char *objectSubtype,
+                                        const char *infoName,
+                                        ANARIDataType infoType)
+{
+  return cycles::query_object_info(objectType, objectSubtype, infoName, infoType);
+}
+
+const void *CyclesDevice::getParameterInfo(ANARIDataType objectType,
+                                           const char *objectSubtype,
+                                           const char *parameterName,
+                                           ANARIDataType parameterType,
+                                           const char *infoName,
+                                           ANARIDataType infoType)
+{
+  return cycles::query_param_info(
+      objectType, objectSubtype, parameterName, parameterType, infoName, infoType);
 }
 
 // Object + Parameter Lifetime Management /////////////////////////////////////
@@ -443,34 +457,6 @@ extern "C" CYCLES_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(cycl
 {
   static const char *devices[] = {"cycles", nullptr};
   return devices;
-}
-
-extern "C" CYCLES_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_SUBTYPES(cycles,
-                                                                            library,
-                                                                            deviceSubtype,
-                                                                            objectType)
-{
-  return cycles::query_object_types(objectType);
-}
-
-extern "C" CYCLES_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_OBJECT_PROPERTY(
-    cycles, library, deviceSubtype, objectSubtype, objectType, propertyName, propertyType)
-{
-  return cycles::query_object_info(objectType, objectSubtype, propertyName, propertyType);
-}
-
-extern "C" CYCLES_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_PARAMETER_PROPERTY(cycles,
-                                                                               library,
-                                                                               deviceSubtype,
-                                                                               objectSubtype,
-                                                                               objectType,
-                                                                               parameterName,
-                                                                               parameterType,
-                                                                               propertyName,
-                                                                               propertyType)
-{
-  return cycles::query_param_info(
-      objectType, objectSubtype, parameterName, parameterType, propertyName, propertyType);
 }
 
 extern "C" CYCLES_DEVICE_INTERFACE ANARIDevice
