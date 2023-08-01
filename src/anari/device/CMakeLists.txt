@@ -53,6 +53,7 @@ PRIVATE
   Geometry.cpp
   Group.cpp
   Instance.cpp
+  Library.cpp
   Light.cpp
   Material.cpp
   Object.cpp

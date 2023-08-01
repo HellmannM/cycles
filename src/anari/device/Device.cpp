@@ -1,12 +1,10 @@
 ﻿// Copyright 2022 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-#include "anari_library_cycles_export.h"
 
 #include "Device.h"
 // anari
 #include "anari/anari_cpp.hpp"
-#include "anari/backend/LibraryImpl.h"
 #include "anari/ext/debug/DebugObject.h"
 // cycles
 #include "scene/background.h"
@@ -444,23 +442,3 @@ CyclesGlobalState *CyclesDevice::deviceState() const
 }
 
 }  // namespace cycles
-
-extern "C" CYCLES_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_NEW_DEVICE(cycles, library, _subtype)
-{
-  auto subtype = std::string_view(_subtype);
-  if (subtype == "default" || subtype == "cycles")
-    return (ANARIDevice) new cycles::CyclesDevice(library);
-  return nullptr;
-}
-
-extern "C" CYCLES_DEVICE_INTERFACE ANARI_DEFINE_LIBRARY_GET_DEVICE_SUBTYPES(cycles, libdata)
-{
-  static const char *devices[] = {"cycles", nullptr};
-  return devices;
-}
-
-extern "C" CYCLES_DEVICE_INTERFACE ANARIDevice
-anariNewCyclesDevice(ANARIStatusCallback defaultCallback, const void *userPtr)
-{
-  return (ANARIDevice) new cycles::CyclesDevice(defaultCallback, userPtr);
-}
