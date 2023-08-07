@@ -9,29 +9,17 @@ project(anari_library_cycles LANGUAGES CXX)
 
 ## Dependencies ##
 
-find_package(anari 0.4.0 REQUIRED)
+find_package(anari 0.7.0 REQUIRED)
 
 ## Code generation
 
-option(CYCLES_ENABLE_CODE_GEN "Enable Python code generation for query updates" OFF)
-mark_as_advanced(CYCLES_ENABLE_CODE_GEN)
-if (CYCLES_ENABLE_CODE_GEN)
-  anari_generate_queries(
-    NAME cycles
-    PREFIX CyclesDevice
-    CPP_NAMESPACE cycles
-    JSON_ROOT_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}
-    JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cycles_device.json
-  )
-
-  anari_generate_debug_objects(
-    NAME cycles
-    PREFIX CyclesDevice
-    CPP_NAMESPACE cycles
-    JSON_ROOT_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}
-    JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cycles_device.json
-  )
-endif()
+anari_generate_queries(
+  NAME cycles
+  PREFIX CyclesDevice
+  CPP_NAMESPACE cycles
+  JSON_ROOT_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}
+  JSON_DEFINITIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cycles_device.json
+)
 
 ## Build device library ##
 
@@ -44,7 +32,6 @@ generate_export_header(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME}
 PRIVATE
-  CyclesDeviceDebugFactory.cpp
   CyclesDeviceQueries.cpp
   Camera.cpp
   Device.cpp
@@ -79,7 +66,6 @@ cycles_external_libraries_append(LIB)
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
   anari::helium
-  anari::anari_library_debug
   cycles_device
   cycles_kernel
   cycles_scene

@@ -77,7 +77,7 @@ static int info_hash(const char *str) {
 static const int32_t anari_true = 1;
 static const int32_t anari_false = 0;
 const char ** query_extensions() {
-   static const char *features[] = {
+   static const char *extensions[] = {
       "ANARI_KHR_CAMERA_ORTHOGRAPHIC",
       "ANARI_KHR_CAMERA_PERSPECTIVE",
       "ANARI_KHR_GEOMETRY_SPHERE",
@@ -85,7 +85,7 @@ const char ** query_extensions() {
       "ANARI_KHR_MATERIAL_MATTE",
       0
    };
-   return features;
+   return extensions;
 }
 const char ** query_object_types(ANARIDataType type) {
    switch(type) {
@@ -3174,7 +3174,7 @@ static const void * ANARI_RENDERER_default_info(int infoName, ANARIDataType info
          }
       case 8: // feature
          if(infoType == ANARI_STRING_LIST) {
-            static const char *features[] = {
+            static const char *extensions[] = {
                "ANARI_KHR_CAMERA_ORTHOGRAPHIC",
                "ANARI_KHR_CAMERA_PERSPECTIVE",
                "ANARI_KHR_GEOMETRY_SPHERE",
@@ -3182,7 +3182,7 @@ static const void * ANARI_RENDERER_default_info(int infoName, ANARIDataType info
                "ANARI_KHR_MATERIAL_MATTE",
                0
             };
-            return features;
+            return extensions;
          } else {
             return nullptr;
          }
@@ -3210,7 +3210,7 @@ static const void * ANARI_DEVICE_info(int infoName, ANARIDataType infoType) {
          }
       case 8: // feature
          if(infoType == ANARI_STRING_LIST) {
-            static const char *features[] = {
+            static const char *extensions[] = {
                "ANARI_KHR_CAMERA_ORTHOGRAPHIC",
                "ANARI_KHR_CAMERA_PERSPECTIVE",
                "ANARI_KHR_GEOMETRY_SPHERE",
@@ -3218,7 +3218,7 @@ static const void * ANARI_DEVICE_info(int infoName, ANARIDataType infoType) {
                "ANARI_KHR_MATERIAL_MATTE",
                0
             };
-            return features;
+            return extensions;
          } else {
             return nullptr;
          }

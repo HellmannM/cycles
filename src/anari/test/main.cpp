@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 // anari
-#define ANARI_FEATURE_UTILITY_IMPL
+#define ANARI_EXTENSION_UTILITY_IMPL
 #include "anari/anari_cpp.hpp"
 #include "anari/anari_cpp/ext/std.h"
 // stb_image
@@ -81,15 +81,15 @@ int main(int argc, const char **argv)
 
   auto d = anari::newDevice(lib, "default");
 
-  anari::Features features = anari::feature::getObjectFeatureStruct(d, ANARI_DEVICE, "default");
+  anari::Extensions extensions = anari::extension::getObjectExtensionStruct(d, ANARI_DEVICE, "default");
 
-  if (!features.ANARI_KHR_GEOMETRY_TRIANGLE)
+  if (!extensions.ANARI_KHR_GEOMETRY_TRIANGLE)
     printf("WARNING: device doesn't support ANARI_KHR_GEOMETRY_TRIANGLE\n");
-  if (!features.ANARI_KHR_CAMERA_PERSPECTIVE)
+  if (!extensions.ANARI_KHR_CAMERA_PERSPECTIVE)
     printf("WARNING: device doesn't support ANARI_KHR_CAMERA_PERSPECTIVE\n");
-  if (!features.ANARI_KHR_LIGHT_DIRECTIONAL)
+  if (!extensions.ANARI_KHR_LIGHT_DIRECTIONAL)
     printf("WARNING: device doesn't support ANARI_KHR_LIGHT_DIRECTIONAL\n");
-  if (!features.ANARI_KHR_MATERIAL_MATTE)
+  if (!extensions.ANARI_KHR_MATERIAL_MATTE)
     printf("WARNING: device doesn't support ANARI_KHR_MATERIAL_MATTE\n");
 
   if (!d) {

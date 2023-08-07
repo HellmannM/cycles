@@ -1,11 +1,9 @@
 ﻿// Copyright 2022 The Khronos Group
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "Device.h"
 // anari
 #include "anari/anari_cpp.hpp"
-#include "anari/ext/debug/DebugObject.h"
 // cycles
 #include "scene/background.h"
 #include "scene/integrator.h"
@@ -37,8 +35,6 @@ const void *query_param_info(ANARIDataType type,
                              ANARIDataType paramType,
                              const char *infoName,
                              ANARIDataType infoType);
-
-anari::debug_device::ObjectFactory *getDebugFactory();
 
 const char **query_extensions();
 
@@ -190,7 +186,7 @@ ANARIGroup CyclesDevice::newGroup()
   return createObjectForAPI<Group, ANARIGroup>(deviceState());
 }
 
-ANARIInstance CyclesDevice::newInstance()
+ANARIInstance CyclesDevice::newInstance(const char * /*subtype*/)
 {
   initDevice();
   return createObjectForAPI<Instance, ANARIInstance>(deviceState());
@@ -241,11 +237,7 @@ int CyclesDevice::getProperty(ANARIObject object,
 {
   if (handleIsDevice(object)) {
     std::string_view prop = name;
-    if (prop == "debugObjects" && type == ANARI_FUNCTION_POINTER) {
-      helium::writeToVoidP(mem, getDebugFactory);
-      return 1;
-    }
-    else if (prop == "feature" && type == ANARI_STRING_LIST) {
+    if (prop == "feature" && type == ANARI_STRING_LIST) {
       helium::writeToVoidP(mem, query_extensions());
       return 1;
     }

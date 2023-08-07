@@ -61,7 +61,7 @@ struct CyclesDevice : public helium::BaseDevice {
 
   ANARIGroup newGroup() override;
 
-  ANARIInstance newInstance() override;
+  ANARIInstance newInstance(const char *subtype) override;
 
   // Top-level Worlds /////////////////////////////////////////////////////////
 
