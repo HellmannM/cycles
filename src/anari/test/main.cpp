@@ -11,7 +11,7 @@
 #include "anari/anari_cpp/ext/std.h"
 // stb_image
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
+#include "stb_image_write.h"
 
 const char *g_libraryName = "environment";
 

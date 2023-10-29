@@ -3,7 +3,7 @@
 
 project(anari_cycles_test LANGUAGES CXX)
 
-find_package(anari 0.3.0 REQUIRED)
+find_package(anari 0.7.0 REQUIRED)
 
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE main.cpp)
