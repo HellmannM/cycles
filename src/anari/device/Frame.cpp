@@ -81,7 +81,7 @@ bool Frame::getProperty(const std::string_view &name,
     if (flags & ANARI_WAIT)
       wait();
     if (ready())
-      deviceState()->commitBuffer.flush();
+      deviceState()->commitBufferFlush();
     bool doReset = resetAccumulationNextFrame();
     helium::writeToVoidP(ptr, doReset);
     return true;
@@ -98,7 +98,7 @@ void Frame::renderFrame()
 
   state.output_driver->renderBegin(this);
 
-  state.commitBuffer.flush();
+  state.commitBufferFlush();
 
   bool resetAccumulation = resetAccumulationNextFrame();
 
@@ -192,7 +192,7 @@ void Frame::wait() const
 bool Frame::resetAccumulationNextFrame() const
 {
   auto &state = *deviceState();
-  return state.objectUpdates.lastAccumulationReset < state.commitBuffer.lastFlush() ||
+  return state.objectUpdates.lastAccumulationReset < state.commitBufferLastFlush() ||
          state.lastFrameRendered != this;
 }
 

@@ -57,7 +57,7 @@ inline HANDLE_T createObjectForAPI(CyclesGlobalState *s, Args &&...args)
 // CyclesDevice definitions ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-// Data Arrays ////////////////////////////////////////////////////////////////
+// API Objects ////////////////////////////////////////////////////////////////
 
 ANARIArray1D CyclesDevice::newArray1D(const void *appMemory,
                                       ANARIMemoryDeleter deleter,
@@ -122,7 +122,35 @@ ANARIArray3D CyclesDevice::newArray3D(const void *appMemory,
   return createObjectForAPI<Array3D, ANARIArray3D>(deviceState(), md);
 }
 
-// Renderable Objects /////////////////////////////////////////////////////////
+ANARICamera CyclesDevice::newCamera(const char *subtype)
+{
+  initDevice();
+  return getHandleForAPI<ANARICamera>(Camera::createInstance(subtype, deviceState()));
+}
+
+ANARIFrame CyclesDevice::newFrame()
+{
+  initDevice();
+  return createObjectForAPI<Frame, ANARIFrame>(deviceState());
+}
+
+ANARIGeometry CyclesDevice::newGeometry(const char *subtype)
+{
+  initDevice();
+  return getHandleForAPI<ANARIGeometry>(Geometry::createInstance(subtype, deviceState()));
+}
+
+ANARIGroup CyclesDevice::newGroup()
+{
+  initDevice();
+  return createObjectForAPI<Group, ANARIGroup>(deviceState());
+}
+
+ANARIInstance CyclesDevice::newInstance(const char * /*subtype*/)
+{
+  initDevice();
+  return createObjectForAPI<Instance, ANARIInstance>(deviceState());
+}
 
 ANARILight CyclesDevice::newLight(const char *subtype)
 {
@@ -130,16 +158,26 @@ ANARILight CyclesDevice::newLight(const char *subtype)
   return getHandleForAPI<ANARILight>(Light::createInstance(subtype, deviceState()));
 }
 
-ANARICamera CyclesDevice::newCamera(const char *subtype)
+ANARIMaterial CyclesDevice::newMaterial(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARICamera>(Camera::createInstance(subtype, deviceState()));
+  return getHandleForAPI<ANARIMaterial>(Material::createInstance(subtype, deviceState()));
 }
 
-ANARIGeometry CyclesDevice::newGeometry(const char *subtype)
+ANARIRenderer CyclesDevice::newRenderer(const char *subtype)
 {
   initDevice();
-  return getHandleForAPI<ANARIGeometry>(Geometry::createInstance(subtype, deviceState()));
+  return createObjectForAPI<Renderer, ANARIRenderer>(deviceState());
+}
+
+ANARISampler CyclesDevice::newSampler(const char *subtype)
+{
+  initDevice();
+#if 1
+  return (ANARISampler) new UnknownObject(ANARI_SAMPLER, subtype, deviceState());
+#else
+  return getHandleForAPI<ANARISampler>(Sampler::createInstance(subtype, deviceState()));
+#endif
 }
 
 ANARISpatialField CyclesDevice::newSpatialField(const char *subtype)
@@ -159,40 +197,6 @@ ANARIVolume CyclesDevice::newVolume(const char *subtype)
   initDevice();
   return (ANARIVolume) new UnknownObject(ANARI_VOLUME, subtype, deviceState());
 }
-
-// Surface Meta-Data //////////////////////////////////////////////////////////
-
-ANARIMaterial CyclesDevice::newMaterial(const char *subtype)
-{
-  initDevice();
-  return getHandleForAPI<ANARIMaterial>(Material::createInstance(subtype, deviceState()));
-}
-
-ANARISampler CyclesDevice::newSampler(const char *subtype)
-{
-  initDevice();
-#if 1
-  return (ANARISampler) new UnknownObject(ANARI_SAMPLER, subtype, deviceState());
-#else
-  return getHandleForAPI<ANARISampler>(Sampler::createInstance(subtype, deviceState()));
-#endif
-}
-
-// Instancing /////////////////////////////////////////////////////////////////
-
-ANARIGroup CyclesDevice::newGroup()
-{
-  initDevice();
-  return createObjectForAPI<Group, ANARIGroup>(deviceState());
-}
-
-ANARIInstance CyclesDevice::newInstance(const char * /*subtype*/)
-{
-  initDevice();
-  return createObjectForAPI<Instance, ANARIInstance>(deviceState());
-}
-
-// Top-level Worlds ///////////////////////////////////////////////////////////
 
 ANARIWorld CyclesDevice::newWorld()
 {
@@ -235,40 +239,14 @@ int CyclesDevice::getProperty(ANARIObject object,
                               uint64_t size,
                               uint32_t mask)
 {
-  if (handleIsDevice(object)) {
-    std::string_view prop = name;
-    if (prop == "feature" && type == ANARI_STRING_LIST) {
-      helium::writeToVoidP(mem, query_extensions());
-      return 1;
-    }
-    else if (prop == "cycles" && type == ANARI_BOOL) {
-      helium::writeToVoidP(mem, true);
-      return 1;
-    }
+#if 0
+  if (mask == ANARI_WAIT) {
+    auto lock = scopeLockObject();
+    deviceState()->waitOnCurrentFrame();
   }
-  else {
-    if (mask == ANARI_WAIT)
-      flushCommitBuffer();
-    return helium::referenceFromHandle(object).getProperty(name, type, mem, mask);
-  }
+#endif
 
-  return 0;
-}
-
-// Frame Manipulation /////////////////////////////////////////////////////////
-
-ANARIFrame CyclesDevice::newFrame()
-{
-  initDevice();
-  return createObjectForAPI<Frame, ANARIFrame>(deviceState());
-}
-
-// Frame Rendering ////////////////////////////////////////////////////////////
-
-ANARIRenderer CyclesDevice::newRenderer(const char *subtype)
-{
-  initDevice();
-  return createObjectForAPI<Renderer, ANARIRenderer>(deviceState());
+  return helium::BaseDevice::getProperty(object, name, type, mem, size, mask);
 }
 
 // Other CyclesDevice definitions /////////////////////////////////////////////
@@ -292,7 +270,7 @@ CyclesDevice::~CyclesDevice()
   state.session->cancel(true);
   state.session->wait();
 
-  state.commitBuffer.clear();
+  state.commitBufferClear();
 
   // We don't want the ccl::Scene deleting these objects, they are already gone
   state.scene->lights.clear();
@@ -307,9 +285,10 @@ CyclesDevice::~CyclesDevice()
   //       really add substantial code complexity, so they are provided out of
   //       convenience.
 
-  auto reportLeaks = [&](size_t &count, const char *handleType) {
-    if (count != 0) {
-      reportMessage(ANARI_SEVERITY_WARNING, "detected %zu leaked %s objects", count, handleType);
+  auto reportLeaks = [&](auto &count, const char *handleType) {
+    size_t c = count.load();
+    if (c != 0) {
+      reportMessage(ANARI_SEVERITY_WARNING, "detected %zu leaked %s objects", c, handleType);
     }
   };
 
@@ -324,10 +303,10 @@ CyclesDevice::~CyclesDevice()
   reportLeaks(state.objectCounts.geometries, "ANARIGeometry");
   reportLeaks(state.objectCounts.materials, "ANARIMaterial");
 
-  if (state.objectCounts.unknown != 0) {
+  if (state.objectCounts.unknown.load() != 0) {
     reportMessage(ANARI_SEVERITY_WARNING,
                   "detected %zu leaked ANARIObject objects created by unknown subtypes",
-                  state.objectCounts.unknown);
+                  state.objectCounts.unknown.load());
   }
 }
 
@@ -426,6 +405,20 @@ void CyclesDevice::initDevice()
   }
 
   m_initialized = true;
+}
+
+int CyclesDevice::deviceGetProperty(const char *name, ANARIDataType type, void *mem, uint64_t size)
+{
+  std::string_view prop = name;
+  if (prop == "feature" && type == ANARI_STRING_LIST) {
+    helium::writeToVoidP(mem, query_extensions());
+    return 1;
+  }
+  else if (prop == "cycles" && type == ANARI_BOOL) {
+    helium::writeToVoidP(mem, true);
+    return 1;
+  }
+  return 0;
 }
 
 CyclesGlobalState *CyclesDevice::deviceState() const
