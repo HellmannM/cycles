@@ -57,6 +57,14 @@ inline HANDLE_T createObjectForAPI(CyclesGlobalState *s, Args &&...args)
 // CyclesDevice definitions ///////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+// Data Arrays ////////////////////////////////////////////////////////////////
+
+void *CyclesDevice::mapArray(ANARIArray a)
+{
+  deviceState()->waitOnCurrentFrame();
+  return helium::BaseDevice::mapArray(a);
+}
+
 // API Objects ////////////////////////////////////////////////////////////////
 
 ANARIArray1D CyclesDevice::newArray1D(const void *appMemory,
@@ -239,12 +247,12 @@ int CyclesDevice::getProperty(ANARIObject object,
                               uint64_t size,
                               uint32_t mask)
 {
-#if 0
   if (mask == ANARI_WAIT) {
     auto lock = scopeLockObject();
+#if 0  // TODO: this causes a crash in anariViewer...(???)
     deviceState()->waitOnCurrentFrame();
-  }
 #endif
+  }
 
   return helium::BaseDevice::getProperty(object, name, type, mem, size, mask);
 }
@@ -308,6 +316,20 @@ CyclesDevice::~CyclesDevice()
                   "detected %zu leaked ANARIObject objects created by unknown subtypes",
                   state.objectCounts.unknown.load());
   }
+}
+
+int CyclesDevice::deviceGetProperty(const char *name, ANARIDataType type, void *mem, uint64_t size)
+{
+  std::string_view prop = name;
+  if (prop == "feature" && type == ANARI_STRING_LIST) {
+    helium::writeToVoidP(mem, query_extensions());
+    return 1;
+  }
+  else if (prop == "cycles" && type == ANARI_BOOL) {
+    helium::writeToVoidP(mem, true);
+    return 1;
+  }
+  return 0;
 }
 
 void CyclesDevice::initDevice()
@@ -405,20 +427,6 @@ void CyclesDevice::initDevice()
   }
 
   m_initialized = true;
-}
-
-int CyclesDevice::deviceGetProperty(const char *name, ANARIDataType type, void *mem, uint64_t size)
-{
-  std::string_view prop = name;
-  if (prop == "feature" && type == ANARI_STRING_LIST) {
-    helium::writeToVoidP(mem, query_extensions());
-    return 1;
-  }
-  else if (prop == "cycles" && type == ANARI_BOOL) {
-    helium::writeToVoidP(mem, true);
-    return 1;
-  }
-  return 0;
 }
 
 CyclesGlobalState *CyclesDevice::deviceState() const

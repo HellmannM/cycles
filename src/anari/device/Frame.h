@@ -38,9 +38,10 @@ struct Frame : public helium::BaseFrame {
   int frameReady(ANARIWaitMask m) override;
   void discard() override;
 
- private:
   bool ready() const;
   void wait() const;
+
+ private:
   bool resetAccumulationNextFrame() const;
 
   friend struct FrameOutputDriver;

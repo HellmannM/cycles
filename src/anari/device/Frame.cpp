@@ -92,15 +92,12 @@ bool Frame::getProperty(const std::string_view &name,
 
 void Frame::renderFrame()
 {
-  wait();
-
   auto &state = *deviceState();
+  state.waitOnCurrentFrame();
 
   state.output_driver->renderBegin(this);
 
   state.commitBufferFlush();
-
-  bool resetAccumulation = resetAccumulationNextFrame();
 
   if (!isValid()) {
     reportMessage(ANARI_SEVERITY_ERROR, "skipping render of incomplete frame object");
@@ -109,12 +106,10 @@ void Frame::renderFrame()
     return;
   }
 
-  if (resetAccumulation) {
+  if (resetAccumulationNextFrame()) {
     reportMessage(ANARI_SEVERITY_INFO, "resetting accumulation");
 
     state.objectUpdates.lastAccumulationReset = helium::newTimeStamp();
-
-    state.lastFrameRendered = this;
 
     m_camera->setCameraCurrent(m_frameData.size.x, m_frameData.size.y);
     m_world->setWorldObjectsCurrent();
@@ -143,11 +138,11 @@ void *Frame::map(std::string_view channel,
   *width = m_frameData.size.x;
   *height = m_frameData.size.y;
 
-  if (channel == "color" || channel == "channel.color") {
+  if (channel == "channel.color") {
     *pixelType = m_colorType;
     return m_pixelBuffer.data();
   }
-  else if (channel == "depth" || channel == "channel.depth") {
+  else if (channel == "channel.depth") {
     *pixelType = ANARI_FLOAT32;
     return m_depthBuffer.data();
   }
@@ -186,14 +181,14 @@ bool Frame::ready() const
 
 void Frame::wait() const
 {
-  deviceState()->output_driver->wait();
+  auto &state = *deviceState();
+  state.output_driver->wait();
 }
 
 bool Frame::resetAccumulationNextFrame() const
 {
   auto &state = *deviceState();
-  return state.objectUpdates.lastAccumulationReset < state.commitBufferLastFlush() ||
-         state.lastFrameRendered != this;
+  return state.objectUpdates.lastAccumulationReset < state.commitBufferLastFlush();
 }
 
 }  // namespace cycles

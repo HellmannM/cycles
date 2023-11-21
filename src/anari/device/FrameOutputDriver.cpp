@@ -100,8 +100,7 @@ void FrameOutputDriver::renderEnd()
 void FrameOutputDriver::wait()
 {
   if (!ready()) {
-    m_impl->mutex.lock();
-    m_impl->mutex.unlock();
+    std::lock_guard<std::mutex>(m_impl->mutex);
   }
 }
 

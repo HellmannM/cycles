@@ -37,8 +37,6 @@ bool World::getProperty(const std::string_view &name,
                         uint32_t flags)
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3) {
-    if (flags & ANARI_WAIT)
-      deviceState()->commitBufferFlush();
     auto b = bounds();
     anari_vec::float3 r[2];
     r[0] = {b.lower.x, b.lower.y, b.lower.z};

@@ -49,16 +49,14 @@ struct CyclesGlobalState : public helium::BaseGlobalDeviceState {
   ccl::BufferParams buffer_params;
 
   FrameOutputDriver *output_driver{nullptr};
-  Frame *lastFrameRendered{nullptr};
 
   ccl::BackgroundNode *background{nullptr};
   ccl::BackgroundNode *ambient{nullptr};
 
   // Helper methods //
 
-  CyclesGlobalState(ANARIDevice d) : helium::BaseGlobalDeviceState(d)
-  {
-  }
+  CyclesGlobalState(ANARIDevice d);
+  void waitOnCurrentFrame() const;
 };
 
 #define CYCLES_ANARI_TYPEFOR_SPECIALIZATION(type, anari_type) \

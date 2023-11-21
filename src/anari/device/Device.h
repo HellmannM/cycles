@@ -16,6 +16,10 @@ struct CyclesDevice : public helium::BaseDevice {
   // Main interface to accepting API calls
   /////////////////////////////////////////////////////////////////////////////
 
+  // Data Arrays //////////////////////////////////////////////////////////////
+
+  void *mapArray(ANARIArray a) override;
+
   // API Objects //////////////////////////////////////////////////////////////
 
   ANARIArray1D newArray1D(const void *appMemory,
@@ -52,17 +56,17 @@ struct CyclesDevice : public helium::BaseDevice {
 
   // Query functions //////////////////////////////////////////////////////////
 
-  const char ** getObjectSubtypes(ANARIDataType objectType) override;
-  const void* getObjectInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* infoName,
-      ANARIDataType infoType) override;
-  const void* getParameterInfo(ANARIDataType objectType,
-      const char* objectSubtype,
-      const char* parameterName,
-      ANARIDataType parameterType,
-      const char* infoName,
-      ANARIDataType infoType) override;
+  const char **getObjectSubtypes(ANARIDataType objectType) override;
+  const void *getObjectInfo(ANARIDataType objectType,
+                            const char *objectSubtype,
+                            const char *infoName,
+                            ANARIDataType infoType) override;
+  const void *getParameterInfo(ANARIDataType objectType,
+                               const char *objectSubtype,
+                               const char *parameterName,
+                               ANARIDataType parameterType,
+                               const char *infoName,
+                               ANARIDataType infoType) override;
 
   // Object + Parameter Lifetime Management ///////////////////////////////////
 
@@ -81,12 +85,11 @@ struct CyclesDevice : public helium::BaseDevice {
   CyclesDevice(ANARILibrary);
   ~CyclesDevice() override;
 
-  void initDevice();
-
-  int deviceGetProperty(
-      const char *name, ANARIDataType type, void *mem, uint64_t size) override;
+  int deviceGetProperty(const char *name, ANARIDataType type, void *mem, uint64_t size) override;
 
  private:
+  void initDevice();
+
   CyclesGlobalState *deviceState() const;
 
   bool m_initialized{false};
