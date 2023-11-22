@@ -339,6 +339,7 @@ void CyclesDevice::initDevice()
 
   reportMessage(ANARI_SEVERITY_DEBUG, "initializing cycles device (%p)", this);
 
+#if 0 // can cause crash in VisRTX viewer app...(???)
   auto devices = ccl::Device::available_devices();
   for (ccl::DeviceInfo &info : devices) {
     reportMessage(ANARI_SEVERITY_DEBUG,
@@ -346,6 +347,7 @@ void CyclesDevice::initDevice()
                   ccl::Device::string_from_type(info.type).c_str(),
                   info.description.c_str());
   }
+#endif
 
   auto &state = *deviceState();
 

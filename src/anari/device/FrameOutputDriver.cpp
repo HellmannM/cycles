@@ -79,12 +79,14 @@ void FrameOutputDriver::write_render_tile(const Tile &tile)
   renderEnd();
 }
 
-void FrameOutputDriver::renderBegin(Frame *f)
+bool FrameOutputDriver::renderBegin(Frame *f)
 {
   m_impl->start = std::chrono::steady_clock::now();
+  bool newFrame = m_impl->frame.ptr == f;
   m_impl->frame = f;
   m_impl->renderFinished = false;
   m_impl->mutex.lock();
+  return newFrame;
 }
 
 void FrameOutputDriver::renderEnd()

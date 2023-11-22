@@ -49,12 +49,6 @@ ccl::Geometry *Surface::makeCyclesGeometry()
   return g;
 }
 
-void Surface::markCommitted()
-{
-  Object::markCommitted();
-  deviceState()->objectUpdates.lastBLSReconstructSceneRequest = helium::newTimeStamp();
-}
-
 bool Surface::isValid() const
 {
   return m_geometry && m_geometry->isValid() && m_material && m_material->isValid();

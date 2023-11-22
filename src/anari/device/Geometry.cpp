@@ -458,12 +458,6 @@ Geometry *Geometry::createInstance(std::string_view type, CyclesGlobalState *s)
     return (Geometry *)new UnknownObject(ANARI_GEOMETRY, type, s);
 }
 
-void Geometry::markCommitted()
-{
-  Object::markCommitted();
-  deviceState()->objectUpdates.lastBLSCommitSceneRequest = helium::newTimeStamp();
-}
-
 }  // namespace cycles
 
 CYCLES_ANARI_TYPEFOR_DEFINITION(cycles::Geometry *);

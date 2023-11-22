@@ -21,7 +21,6 @@ struct Surface : public Object {
 
   ccl::Geometry *makeCyclesGeometry();
 
-  void markCommitted() override;
   bool isValid() const override;
   void warnIfUnknownObject() const override;
 

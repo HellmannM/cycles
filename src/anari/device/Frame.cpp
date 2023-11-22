@@ -95,7 +95,7 @@ void Frame::renderFrame()
   auto &state = *deviceState();
   state.waitOnCurrentFrame();
 
-  state.output_driver->renderBegin(this);
+  bool currentFrameChanged = state.output_driver->renderBegin(this);
 
   state.commitBufferFlush();
 
@@ -106,14 +106,17 @@ void Frame::renderFrame()
     return;
   }
 
-  if (resetAccumulationNextFrame()) {
-    reportMessage(ANARI_SEVERITY_INFO, "resetting accumulation");
+  if (currentFrameChanged || resetAccumulationNextFrame()) {
+    reportMessage(ANARI_SEVERITY_DEBUG, "resetting accumulation");
 
     state.objectUpdates.lastAccumulationReset = helium::newTimeStamp();
 
     m_camera->setCameraCurrent(m_frameData.size.x, m_frameData.size.y);
-    m_world->setWorldObjectsCurrent();
     m_renderer->makeRendererCurrent();
+    if (currentFrameChanged || shouldUpdateCyclesScene()) {
+      m_world->setWorldObjectsCurrent();
+      m_worldLastChanged = helium::newTimeStamp();
+    }
 
     state.buffer_params.width = m_frameData.size.x;
     state.buffer_params.height = m_frameData.size.y;
@@ -189,6 +192,12 @@ bool Frame::resetAccumulationNextFrame() const
 {
   auto &state = *deviceState();
   return state.objectUpdates.lastAccumulationReset < state.commitBufferLastFlush();
+}
+
+bool Frame::shouldUpdateCyclesScene() const
+{
+  auto &state = *deviceState();
+  return m_worldLastChanged < state.objectUpdates.lastSceneChange;
 }
 
 }  // namespace cycles

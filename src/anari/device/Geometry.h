@@ -16,8 +16,6 @@ struct Geometry : public Object {
 
   static Geometry *createInstance(std::string_view type, CyclesGlobalState *state);
 
-  void markCommitted() override;
-
   virtual ccl::Geometry *makeCyclesGeometry() = 0;
 };
 

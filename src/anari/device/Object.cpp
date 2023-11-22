@@ -10,9 +10,7 @@ namespace cycles {
 
 // Object definitions /////////////////////////////////////////////////////////
 
-Object::Object(ANARIDataType type, CyclesGlobalState *s) : helium::BaseObject(type, s)
-{
-}
+Object::Object(ANARIDataType type, CyclesGlobalState *s) : helium::BaseObject(type, s) {}
 
 void Object::commit()
 {
@@ -45,6 +43,26 @@ void Object::warnIfUnknownObject() const
 box3 Object::bounds() const
 {
   return empty_box3();
+}
+
+void Object::markCommitted()
+{
+  helium::BaseObject::markCommitted();
+  switch (type()) {
+    case ANARI_GEOMETRY:
+    case ANARI_SAMPLER:
+    case ANARI_MATERIAL:
+    case ANARI_SURFACE:
+    case ANARI_SPATIAL_FIELD:
+    case ANARI_VOLUME:
+    case ANARI_GROUP:
+    case ANARI_INSTANCE:
+    case ANARI_WORLD:
+      deviceState()->objectUpdates.lastSceneChange = helium::newTimeStamp();
+      break;
+    default:
+      break;
+  }
 }
 
 CyclesGlobalState *Object::deviceState() const

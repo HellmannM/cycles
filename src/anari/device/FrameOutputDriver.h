@@ -18,7 +18,7 @@ struct FrameOutputDriver : public ccl::OutputDriver {
 
   void write_render_tile(const Tile &tile) override;
 
-  void renderBegin(Frame *);
+  bool renderBegin(Frame *);
   void renderEnd();
 
   void wait();
