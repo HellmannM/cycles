@@ -137,12 +137,6 @@ int main(int argc, const char **argv)
   anari::setAndReleaseParameter(d, world, "surface", anari::newArray1D(d, &surface));
   anari::release(d, surface);
 
-  // create and setup light for Ambient Occlusion
-  auto light = anari::newObject<anari::Light>(d, "ambient");
-  anari::commitParameters(d, light);
-  anari::setAndReleaseParameter(d, world, "light", anari::newArray1D(d, &light));
-  anari::release(d, light);
-
   anari::commitParameters(d, world);
 
   printf("done!\n");
@@ -173,7 +167,8 @@ int main(int argc, const char **argv)
 
   // complete setup of renderer
   vec4 bgColor = {1.f, 1.f, 1.f, 1.f};
-  anari::setParameter(d, renderer, "backgroundColor", bgColor);  // white
+  anari::setParameter(d, renderer, "background", bgColor);
+  anari::setParameter(d, renderer, "ambientRadiance", 1.f);
   anari::commitParameters(d, renderer);
 
   // create and setup frame

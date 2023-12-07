@@ -79,7 +79,10 @@ void Directional::commit()
 
   auto &state = *deviceState();
   m_cyclesLight->set_strength(m_irradiance * color);
-  m_cyclesLight->set_dir(direction);
+
+  auto tfm = m_cyclesLight->get_tfm();
+  transform_set_column(&tfm, 2, -direction);
+  m_cyclesLight->set_tfm(tfm);
   m_cyclesLight->tag_update(state.scene);
 }
 
