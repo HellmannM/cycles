@@ -9,7 +9,7 @@ project(anari_library_cycles LANGUAGES CXX)
 
 ## Dependencies ##
 
-find_package(anari 0.7.0 REQUIRED)
+find_package(anari 0.10.0 REQUIRED)
 
 ## Code generation
 
@@ -48,11 +48,6 @@ PRIVATE
   Renderer.cpp
   Surface.cpp
   World.cpp
-  array/Array.cpp
-  array/Array1D.cpp
-  array/Array2D.cpp
-  array/Array3D.cpp
-  array/ObjectArray.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

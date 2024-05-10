@@ -3,34 +3,12 @@
 
 #pragma once
 
-#include "array/Array.h"
+// helium
+#include "helium/array/Array3D.h"
 
 namespace cycles {
 
-struct Array3DMemoryDescriptor : public ArrayMemoryDescriptor
-{
-  uint64_t numItems1{0};
-  uint64_t numItems2{0};
-  uint64_t numItems3{0};
-};
-
-bool isCompact(const Array3DMemoryDescriptor &d);
-
-struct Array3D : public Array
-{
-  Array3D(CyclesGlobalState *state, const Array3DMemoryDescriptor &d);
-
-  size_t totalSize() const override;
-
-  size_t size(int dim) const;
-  uint3 size() const;
-
-  void privatize() override;
-
- private:
-  size_t m_size[3] = {0, 0, 0};
-};
+using Array3DMemoryDescriptor = helium::Array3DMemoryDescriptor;
+using Array3D = helium::Array3D;
 
 } // namespace cycles
-
-CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Array3D *, ANARI_ARRAY3D);

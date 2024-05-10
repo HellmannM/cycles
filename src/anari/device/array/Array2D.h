@@ -3,33 +3,12 @@
 
 #pragma once
 
-#include "array/Array.h"
+// helium
+#include "helium/array/Array2D.h"
 
 namespace cycles {
 
-struct Array2DMemoryDescriptor : public ArrayMemoryDescriptor
-{
-  uint64_t numItems1{0};
-  uint64_t numItems2{0};
-};
-
-bool isCompact(const Array2DMemoryDescriptor &d);
-
-struct Array2D : public Array
-{
-  Array2D(CyclesGlobalState *state, const Array2DMemoryDescriptor &d);
-
-  size_t totalSize() const override;
-
-  size_t size(int dim) const;
-  uint2 size() const;
-
-  void privatize() override;
-
- private:
-  size_t m_size[2] = {0, 0};
-};
+using Array2DMemoryDescriptor = helium::Array2DMemoryDescriptor;
+using Array2D = helium::Array2D;
 
 } // namespace cycles
-
-CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::Array2D *, ANARI_ARRAY2D);

@@ -1,6 +1,8 @@
 ## Copyright 2022 Jefferson Amstutz
 ## SPDX-License-Identifier: Apache-2.0
 
+return()
+
 project(cycles_viewer LANGUAGES CXX)
 
 find_package(match3D REQUIRED COMPONENTS stb_image)

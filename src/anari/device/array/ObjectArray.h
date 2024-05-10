@@ -3,42 +3,11 @@
 
 #pragma once
 
-#include "array/Array1D.h"
+// helium
+#include "helium/array/ObjectArray.h"
 
 namespace cycles {
 
-struct ObjectArray : public Array
-{
-  ObjectArray(CyclesGlobalState *state, const Array1DMemoryDescriptor &d);
-  ~ObjectArray();
-
-  void commit() override;
-
-  size_t totalSize() const override;
-  size_t totalCapacity() const override;
-
-  size_t size() const;
-
-  void privatize() override;
-  void unmap() override;
-
-  Object **handlesBegin() const;
-  Object **handlesEnd() const;
-
-  void appendHandle(Object *);
-  void removeAppendedHandles();
-
- private:
-  void updateInternalHandleArrays() const;
-
-  mutable std::vector<Object *> m_appendedHandles;
-  mutable std::vector<Object *> m_appHandles;
-  mutable std::vector<Object *> m_liveHandles;
-  size_t m_capacity{0};
-  size_t m_begin{0};
-  size_t m_end{0};
-};
+using ObjectArray = helium::ObjectArray;
 
 } // namespace cycles
-
-CYCLES_ANARI_TYPEFOR_SPECIALIZATION(cycles::ObjectArray *, ANARI_ARRAY1D);

@@ -185,7 +185,7 @@ void Triangle::setVertexAttribute(ccl::Mesh *mesh,
     return;
 
   anari::DataType type = array->elementType();
-  void *src = array->data();
+  const void *src = array->data();
 
   Attribute *attr = mesh->attributes.add(ATTR_STD_UV, ustring(name));
   float2 *dst = attr->data_float2();
@@ -305,12 +305,12 @@ void Sphere::setSpheres(ccl::PointCloud *pc)
   auto *dstRadius = (float *)radius.resize(numSpheres);
   auto *dstShader = (int *)shader.resize(numSpheres);
 
-  auto *srcPoint = m_vertexPosition->beginAs<anari_vec::float3>();
-  float *srcRadius = nullptr;
+  const auto *srcPoint = m_vertexPosition->beginAs<anari_vec::float3>();
+  const float *srcRadius = nullptr;
   if (m_vertexRadius)
     srcRadius = m_vertexRadius->beginAs<float>();
 
-  uint32_t *srcIdx = nullptr;
+  const uint32_t *srcIdx = nullptr;
   if (m_index)
     srcIdx = m_index->beginAs<uint32_t>();
 
@@ -335,11 +335,11 @@ void Sphere::setAttributes(ccl::PointCloud *pc)
   float3 *dst2 = nullptr;
   float3 *dst3 = nullptr;
 
-  void *srcC = nullptr;
-  void *src0 = nullptr;
-  void *src1 = nullptr;
-  void *src2 = nullptr;
-  void *src3 = nullptr;
+  const void *srcC = nullptr;
+  const void *src0 = nullptr;
+  const void *src1 = nullptr;
+  const void *src2 = nullptr;
+  const void *src3 = nullptr;
 
   anari::DataType srcTC = ANARI_UNKNOWN;
   anari::DataType srcT0 = ANARI_UNKNOWN;
@@ -394,7 +394,7 @@ void Sphere::setAttributes(ccl::PointCloud *pc)
     srcT3 = m_vertexAttribute3->elementType();
   }
 
-  uint32_t *srcIdx = nullptr;
+  const uint32_t *srcIdx = nullptr;
   if (m_index)
     srcIdx = m_index->beginAs<uint32_t>();
   for (size_t i = 0; i < numSpheres; i++) {
