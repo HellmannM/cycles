@@ -369,9 +369,13 @@ void CyclesDevice::initDevice()
   // code signaling the frame is complete.
   state.scene->integrator->set_use_adaptive_sampling(false);
 
-  ccl::Pass *pass = state.scene->create_node<ccl::Pass>();
-  pass->set_name(OIIO::ustring("combined"));
-  pass->set_type(ccl::PASS_COMBINED);
+  ccl::Pass *pass_combined = state.scene->create_node<ccl::Pass>();
+  pass_combined->set_name(OIIO::ustring("combined"));
+  pass_combined->set_type(ccl::PASS_COMBINED);
+
+  ccl::Pass *pass_depth = state.scene->create_node<ccl::Pass>();
+  pass_depth->set_name(OIIO::ustring("depth"));
+  pass_depth->set_type(ccl::PASS_DEPTH);
 
   auto output_driver = std::make_unique<FrameOutputDriver>();
   state.output_driver = output_driver.get();
