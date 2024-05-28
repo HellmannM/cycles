@@ -52,7 +52,6 @@ PhysicallyBasedMaterial::PhysicallyBasedMaterial(CyclesGlobalState *s) : Materia
 {
   auto *bsdf = new ccl::PrincipledBsdfNode();
   bsdf->set_owner(m_graph);
-  bsdf->input("Subsurface")->set(0.f);
   m_graph->add(bsdf);
 
   m_graph->connect(bsdf->output("BSDF"), m_graph->output()->input("Surface"));
@@ -70,9 +69,11 @@ void PhysicallyBasedMaterial::commit()
   auto opacity = getParam<float>("opacity", 1.f);
   connectAttributes(m_bsdf, opacityMode, "Alpha", make_float3(opacity));
 
+#if 0
   auto specularMode = getParamString("specular", "");
   auto specular = getParam<float>("specular", 0.f);
   connectAttributes(m_bsdf, specularMode, "Specular", make_float3(specular));
+#endif
 
   auto roughnessMode = getParamString("roughness", "");
   auto roughness = getParam<float>("roughness", 1.f);
@@ -82,6 +83,7 @@ void PhysicallyBasedMaterial::commit()
   auto metallic = getParam<float>("metallic", 1.f);
   connectAttributes(m_bsdf, metallicMode, "Metallic", make_float3(metallic));
 
+#if 0
   auto transmissionMode = getParamString("transmission", "");
   auto transmission = getParam<float>("transmission", 0.f);
   connectAttributes(m_bsdf, transmissionMode, "Transmission", make_float3(transmission));
@@ -94,6 +96,7 @@ void PhysicallyBasedMaterial::commit()
   auto clearcoatRoughness = getParam<float>("clearcoatRoughness", 0.f);
   connectAttributes(
       m_bsdf, clearcoatRoughnessMode, "Clearcoat Roughness", make_float3(clearcoatRoughness));
+#endif
 
   auto ior = getParam<float>("ior", 1.5f);
   m_bsdf->input("IOR")->set(ior);
