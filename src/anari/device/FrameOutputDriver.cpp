@@ -6,6 +6,7 @@
 // std
 #include <algorithm>
 #include <chrono>
+#include <condition_variable>
 #include <mutex>
 #include <vector>
 
@@ -37,6 +38,7 @@ struct FrameOutputDriver::Impl {
   std::vector<float4> buffer;
   bool renderFinished{true};
   std::mutex mutex;
+  std::condition_variable cv;
 
   std::chrono::time_point<std::chrono::steady_clock> start;
 };
@@ -81,28 +83,33 @@ void FrameOutputDriver::write_render_tile(const Tile &tile)
 
 bool FrameOutputDriver::renderBegin(Frame *f)
 {
+  std::lock_guard<std::mutex> lock(m_impl->mutex);
   m_impl->start = std::chrono::steady_clock::now();
   bool newFrame = m_impl->frame.ptr == f;
   m_impl->frame = f;
   m_impl->renderFinished = false;
-  m_impl->mutex.lock();
   return newFrame;
 }
 
 void FrameOutputDriver::renderEnd()
 {
+  std::lock_guard<std::mutex> lock(m_impl->mutex);
+
   auto end = std::chrono::steady_clock::now();
   m_impl->frame->m_duration = std::chrono::duration<float>(end - m_impl->start).count();
 
   m_impl->frame = nullptr;
   m_impl->renderFinished = true;
-  m_impl->mutex.unlock();
+
+  // Notify the wait thread
+  m_impl->cv.notify_one();
 }
 
 void FrameOutputDriver::wait()
 {
   if (!ready()) {
-    std::lock_guard<std::mutex>(m_impl->mutex);
+    std::unique_lock<std::mutex> lock(m_impl->mutex);
+    m_impl->cv.wait(lock, [this] { return ready(); });
   }
 }
 
