@@ -23,7 +23,7 @@ anari_generate_queries(
 
 ## Build device library ##
 
-add_library(${PROJECT_NAME} MODULE)
+add_library(${PROJECT_NAME} SHARED)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
