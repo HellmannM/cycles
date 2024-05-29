@@ -25,9 +25,9 @@ void Group::commit()
   m_lightData = getParamObject<ObjectArray>("light");
 
   if (m_surfaceData)
-    m_surfaceData->addCommitObserver(this);
+    m_surfaceData->addChangeObserver(this);
   if (m_lightData)
-    m_lightData->addCommitObserver(this);
+    m_lightData->addChangeObserver(this);
 }
 
 void Group::addGroupToCurrentWorld(const ccl::Transform &xfm) const
@@ -92,9 +92,9 @@ box3 Group::bounds() const
 void Group::cleanup()
 {
   if (m_surfaceData)
-    m_surfaceData->removeCommitObserver(this);
+    m_surfaceData->removeChangeObserver(this);
   if (m_lightData)
-    m_lightData->removeCommitObserver(this);
+    m_lightData->removeChangeObserver(this);
 }
 
 }  // namespace cycles

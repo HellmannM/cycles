@@ -78,11 +78,11 @@ void World::commit()
   m_instanceData = getParamObject<ObjectArray>("instance");
 
   if (m_instanceData)
-    m_instanceData->addCommitObserver(this);
+    m_instanceData->addChangeObserver(this);
   if (m_zeroSurfaceData)
-    m_zeroSurfaceData->addCommitObserver(this);
+    m_zeroSurfaceData->addChangeObserver(this);
   if (m_zeroLightData)
-    m_zeroLightData->addCommitObserver(this);
+    m_zeroLightData->addChangeObserver(this);
 }
 
 void World::setWorldObjectsCurrent()
@@ -135,11 +135,11 @@ box3 World::bounds() const
 void World::cleanup()
 {
   if (m_instanceData)
-    m_instanceData->removeCommitObserver(this);
+    m_instanceData->removeChangeObserver(this);
   if (m_zeroSurfaceData)
-    m_zeroSurfaceData->removeCommitObserver(this);
+    m_zeroSurfaceData->removeChangeObserver(this);
   if (m_zeroLightData)
-    m_zeroLightData->removeCommitObserver(this);
+    m_zeroLightData->removeChangeObserver(this);
 }
 
 }  // namespace cycles

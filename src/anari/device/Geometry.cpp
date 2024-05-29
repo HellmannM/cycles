@@ -84,9 +84,9 @@ void Triangle::commit()
     return;
   }
 
-  m_vertexPosition->addCommitObserver(this);
+  m_vertexPosition->addChangeObserver(this);
   if (m_index)
-    m_index->addCommitObserver(this);
+    m_index->addChangeObserver(this);
 }
 
 ccl::Geometry *Triangle::makeCyclesGeometry()
@@ -201,9 +201,9 @@ void Triangle::setVertexAttribute(ccl::Mesh *mesh,
 void Triangle::cleanup()
 {
   if (m_index)
-    m_index->removeCommitObserver(this);
+    m_index->removeChangeObserver(this);
   if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
+    m_vertexPosition->removeChangeObserver(this);
 }
 
 // Sphere definitions /////////////////////////////////////////////////////////
@@ -265,9 +265,9 @@ void Sphere::commit()
     return;
   }
 
-  m_vertexPosition->addCommitObserver(this);
+  m_vertexPosition->addChangeObserver(this);
   if (m_index)
-    m_index->addCommitObserver(this);
+    m_index->addChangeObserver(this);
 }
 
 ccl::Geometry *Sphere::makeCyclesGeometry()
@@ -429,9 +429,9 @@ void Sphere::setAttributes(ccl::PointCloud *pc)
 void Sphere::cleanup()
 {
   if (m_index)
-    m_index->removeCommitObserver(this);
+    m_index->removeChangeObserver(this);
   if (m_vertexPosition)
-    m_vertexPosition->removeCommitObserver(this);
+    m_vertexPosition->removeChangeObserver(this);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
