@@ -66,6 +66,10 @@ void Camera::setCameraCurrent(int width, int height)
   state.scene->camera->set_matrix(getMatrix());
   state.scene->camera->set_full_width(width);
   state.scene->camera->set_full_height(height);
+
+  //state.scene->camera->set_nearclip(0.1f);
+  //state.scene->camera->set_farclip(100000.0f);
+
   state.scene->camera->need_flags_update = true;
   state.scene->camera->need_device_update = true;
 }
@@ -112,12 +116,34 @@ void Perspective::setCameraCurrent(int width, int height)
 {
   Camera::setCameraCurrent(width, height);
   auto &state = *deviceState();
-  state.scene->camera->viewplane.left = -m_aspect;
-  state.scene->camera->viewplane.right = m_aspect;
-  state.scene->camera->viewplane.bottom = -1.0f;
-  state.scene->camera->viewplane.top = 1.0f;
+  // state.scene->camera->viewplane.left = -m_aspect;
+  // state.scene->camera->viewplane.right = m_aspect;
+  // state.scene->camera->viewplane.bottom = -1.0f;
+  // state.scene->camera->viewplane.top = 1.0f;
   state.scene->camera->set_fov(m_fovy);
   state.scene->camera->set_camera_type(ccl::CameraType::CAMERA_PERSPECTIVE);
+
+    float xratio = (float)width;
+    float yratio = (float)height;
+    bool horizontal_fit = (xratio > yratio);
+
+    float aspectratio;
+    float xaspect, yaspect;
+    if (horizontal_fit) {
+        aspectratio = xratio / yratio;
+        xaspect = aspectratio;
+        yaspect = 1.0f;
+    }
+    else {
+        aspectratio = yratio / xratio;
+        xaspect = 1.0f;
+        yaspect = aspectratio;
+    }
+
+    state.scene->camera->set_viewplane_left(-xaspect);
+    state.scene->camera->set_viewplane_right(xaspect);
+    state.scene->camera->set_viewplane_bottom(-yaspect);
+    state.scene->camera->set_viewplane_top(yaspect);
 }
 
 // Orthographic definitions ///////////////////////////////////////////////////
@@ -138,11 +164,37 @@ void Orthographic::setCameraCurrent(int width, int height)
   Camera::setCameraCurrent(width, height);
   auto &state = *deviceState();
   state.scene->camera->set_camera_type(ccl::CameraType::CAMERA_ORTHOGRAPHIC);
-  auto scale = m_height / 2.f;
-  state.scene->camera->viewplane.left = -m_aspect * scale;
-  state.scene->camera->viewplane.right = m_aspect * scale;
-  state.scene->camera->viewplane.bottom = -scale;
-  state.scene->camera->viewplane.top = scale;
+  //auto scale = m_height / 2.f;
+  //state.scene->camera->viewplane.left = -m_aspect * scale;
+  //state.scene->camera->viewplane.right = m_aspect * scale;
+  //state.scene->camera->viewplane.bottom = -scale;
+  //state.scene->camera->viewplane.top = scale;
+
+  float ortho_scale = m_height / 2.f;
+  float xratio = (float)width;
+  float yratio = (float)height;
+  bool horizontal_fit = (xratio > yratio);
+
+  float aspectratio;
+  float xaspect, yaspect;
+  if (horizontal_fit) {
+      aspectratio = xratio / yratio;
+      xaspect = aspectratio;
+      yaspect = 1.0f;
+  }
+  else {
+      aspectratio = yratio / xratio;
+      xaspect = 1.0f;
+      yaspect = aspectratio;
+  }
+
+  xaspect = xaspect * ortho_scale;
+  yaspect = yaspect * ortho_scale;
+
+  state.scene->camera->set_viewplane_left(-xaspect);
+  state.scene->camera->set_viewplane_right(xaspect);
+  state.scene->camera->set_viewplane_bottom(-yaspect);
+  state.scene->camera->set_viewplane_top(yaspect);
 }
 
 }  // namespace cycles

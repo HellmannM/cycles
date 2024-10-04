@@ -29,6 +29,8 @@ void Renderer::commit()
 void Renderer::makeRendererCurrent() const
 {
   auto &state = *deviceState();
+
+#if 0
   auto bgc = m_backgroundColor;
 
   for (auto &v : bgc)
@@ -40,9 +42,12 @@ void Renderer::makeRendererCurrent() const
 
   state.background->set_color(ccl::make_float3(bgc[0], bgc[1], bgc[2]));
   state.background->set_strength(1.f);
+#endif
 
+#if 0 //TODO - performance issue
   state.scene->default_background->tag_update(state.scene);
   state.scene->background->tag_update(state.scene);
+#endif
 }
 
 }  // namespace cycles

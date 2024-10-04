@@ -191,7 +191,8 @@ ANARISampler CyclesDevice::newSampler(const char *subtype)
 ANARISpatialField CyclesDevice::newSpatialField(const char *subtype)
 {
   initDevice();
-  return (ANARISpatialField) new UnknownObject(ANARI_SPATIAL_FIELD, subtype, deviceState());
+  //return (ANARISpatialField) new UnknownObject(ANARI_SPATIAL_FIELD, subtype, deviceState());
+  return getHandleForAPI<ANARISpatialField>(SpatialField::createInstance(subtype, deviceState()));
 }
 
 ANARISurface CyclesDevice::newSurface()
@@ -203,7 +204,8 @@ ANARISurface CyclesDevice::newSurface()
 ANARIVolume CyclesDevice::newVolume(const char *subtype)
 {
   initDevice();
-  return (ANARIVolume) new UnknownObject(ANARI_VOLUME, subtype, deviceState());
+  //return (ANARIVolume) new UnknownObject(ANARI_VOLUME, subtype, deviceState());
+  return getHandleForAPI<ANARIVolume>(Volume::createInstance(subtype, deviceState()));
 }
 
 ANARIWorld CyclesDevice::newWorld()
@@ -353,13 +355,29 @@ void CyclesDevice::initDevice()
 
   auto *useGPU = getenv("CYCLES_ANARI_USE_GPU");
 
-  state.session_params.device.type = useGPU ? ccl::DEVICE_OPTIX : ccl::DEVICE_CPU;
+  //state.session_params.device.type = useGPU ? ccl::DEVICE_OPTIX : ccl::DEVICE_CPU;
+  state.session_params.device.type = ccl::DEVICE_CPU;
+  if (useGPU) {
+    printf("useGPU: %s\n", useGPU);
+    
+    if (!strcmp(useGPU, "CPU"))
+      state.session_params.device.type = ccl::DEVICE_CPU;
+    else if (!strcmp(useGPU, "OPTIX"))
+      state.session_params.device.type = ccl::DEVICE_OPTIX;
+    else if (!strcmp(useGPU, "CUDA"))
+      state.session_params.device.type = ccl::DEVICE_CUDA;      
+    else if (!strcmp(useGPU, "HIP"))
+      state.session_params.device.type = ccl::DEVICE_HIP;            
+  }
+
   state.session_params.background = false;
   state.session_params.headless = false;
   state.session_params.use_auto_tile = false;
   state.session_params.tile_size = 64;  // 2048
   state.session_params.use_resolution_divider = false;
   state.session_params.samples = 1;
+
+  //state.session_params.threads = 1;
 
   state.session = std::make_unique<ccl::Session>(state.session_params, state.scene_params);
   state.scene = state.session->scene;
@@ -369,10 +387,16 @@ void CyclesDevice::initDevice()
   // code signaling the frame is complete.
   state.scene->integrator->set_use_adaptive_sampling(false);
 
+  state.scene->integrator->set_volume_step_rate(0.1f);
+  state.scene->integrator->set_volume_max_steps(64);
+  //state.scene->integrator->set_max_volume_bounce(64);
+  
+  // combined
   ccl::Pass *pass_combined = state.scene->create_node<ccl::Pass>();
   pass_combined->set_name(OIIO::ustring("combined"));
   pass_combined->set_type(ccl::PASS_COMBINED);
 
+  // depth
   ccl::Pass *pass_depth = state.scene->create_node<ccl::Pass>();
   pass_depth->set_name(OIIO::ustring("depth"));
   pass_depth->set_type(ccl::PASS_DEPTH);
@@ -383,6 +407,7 @@ void CyclesDevice::initDevice()
   state.session->set_output_driver(std::move(output_driver));
 
   // setup background shader (divides out ambient and bg color)
+#if 0
   {
     auto *shader = state.scene->default_background;
     auto *graph = new ccl::ShaderGraph();
@@ -414,7 +439,70 @@ void CyclesDevice::initDevice()
     state.scene->background->set_shader(state.scene->default_background);
     state.scene->background->set_use_shader(true);
   }
+#else
+  {
+      auto* shader = state.scene->default_background;
+      auto* graph = new ccl::ShaderGraph();
 
+#if 0
+
+      // Create the texture coordinate node
+      auto* tex_coord = graph->create_node<ccl::TextureCoordinateNode>();
+      tex_coord->set_owner(graph);
+      graph->add(tex_coord);
+
+      // Create the mapping node to handle rotation
+      auto* mapping = graph->create_node<ccl::MappingNode>();
+      mapping->set_owner(graph);
+      //mapping->set_rotation(ccl::make_float3(M_PI_2, 0.0f, 0.0f));  // Rotate 90 degrees around the Y axis
+      graph->add(mapping);
+
+      // Create the sky texture node
+      auto* sky = graph->create_node<ccl::SkyTextureNode>();
+      sky->set_owner(graph);
+      sky->set_sky_type(ccl::NODE_SKY_PREETHAM);
+      graph->add(sky);
+
+      // Create the background node
+      auto* bg = graph->create_node<ccl::BackgroundNode>();
+      bg->set_strength(0.5f);
+      bg->set_owner(graph);
+      graph->add(bg);
+
+      //graph->connect(sky->output("Color"), bg->input("Color"));
+      //graph->connect(bg->output("Background"), graph->output()->input("Surface"));
+      
+      //Connect the nodes
+      graph->connect(tex_coord->output("Generated"), mapping->input("Vector"));
+      graph->connect(mapping->output("Vector"), sky->input("Vector"));
+      graph->connect(sky->output("Color"), bg->input("Color"));
+      graph->connect(bg->output("Background"), graph->output()->input("Surface"));
+
+      shader->set_graph(graph);
+      state.scene->background->set_shader(state.scene->default_background);
+      state.scene->background->set_use_shader(true);
+      shader->tag_update(state.scene);
+
+#endif
+
+      // Create the background node
+      auto* bg = graph->create_node<ccl::BackgroundNode>();
+      bg->set_strength(0.3f);
+      bg->set_color(ccl::make_float3(0.3f, 0.3f, 0.3f));
+      bg->set_owner(graph);
+      graph->add(bg);
+
+      graph->connect(bg->output("Background"), graph->output()->input("Surface"));
+
+      shader->set_graph(graph);
+      state.scene->background->set_shader(state.scene->default_background);
+      state.scene->background->set_use_shader(true);
+      shader->tag_update(state.scene);
+
+  }
+#endif
+
+#if 0
   // setup global light shader
   {
     auto *shader = state.scene->default_light;
@@ -431,6 +519,14 @@ void CyclesDevice::initDevice()
     shader->set_graph(graph);
     shader->reference();
   }
+#endif
+
+#if 0
+  //log
+  int verbosity = 3;
+  util_logging_start();
+  util_logging_verbosity_set(verbosity);
+#endif
 
   m_initialized = true;
 }
