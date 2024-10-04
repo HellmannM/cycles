@@ -8,6 +8,9 @@
 #include "util/string.h"
 #include "util/transform.h"
 
+#include "scene/shader_graph.h"
+#include "scene/osl.h"
+
 CCL_NAMESPACE_BEGIN
 
 static bool xml_read_boolean(const char *value)
@@ -430,6 +433,168 @@ xml_node xml_write_node(Node *node, xml_node xml_root)
   }
 
   return xml_node;
+}
+
+void xml_read_shader(const char* filename, ShaderGraph* graph)
+{
+    if (filename == nullptr)
+        return;
+
+    pugi::xml_document xml_doc;
+    xml_doc.load_file(filename);
+    xml_node graph_node = xml_doc;
+
+    XMLReader graph_reader;
+    graph_reader.node_map[ustring("output")] = graph->output();
+
+    for (xml_node node = graph_node.first_child(); node; node = node.next_sibling()) {
+        ustring node_name(node.name());
+
+        if (node_name == "connect") {
+            /* connect nodes */
+            vector<string> from_tokens, to_tokens;
+
+            string_split(from_tokens, node.attribute("from").value(), ";");
+            string_split(to_tokens, node.attribute("to").value(), ";");
+
+            if (from_tokens.size() == 2 && to_tokens.size() == 2) {
+                ustring from_node_name(from_tokens[0]);
+                ustring from_socket_name(from_tokens[1]);
+                ustring to_node_name(to_tokens[0]);
+                ustring to_socket_name(to_tokens[1]);
+
+                /* find nodes and sockets */
+                ShaderOutput* output = NULL;
+                ShaderInput* input = NULL;
+
+                if (graph_reader.node_map.find(from_node_name) != graph_reader.node_map.end()) {
+                    ShaderNode* fromnode = (ShaderNode*)graph_reader.node_map[from_node_name];
+
+                    foreach(ccl::ShaderOutput * out, fromnode->outputs)
+                        if (string_iequals(out->socket_type.name.string(), from_socket_name.string())) {
+                            output = out;
+                        }
+
+                    if (!output) {
+                        fprintf(stderr,
+                            "Unknown output socket name \"%s\" on \"%s\".\n",
+                            from_node_name.c_str(),
+                            from_socket_name.c_str());
+                    }
+                }
+                else {
+                    fprintf(stderr, "Unknown shader node name \"%s\".\n", from_node_name.c_str());
+                }
+
+                if (graph_reader.node_map.find(to_node_name) != graph_reader.node_map.end()) {
+                    ShaderNode* tonode = (ShaderNode*)graph_reader.node_map[to_node_name];
+
+                    foreach(ShaderInput * in, tonode->inputs)
+                        if (string_iequals(in->socket_type.name.string(), to_socket_name.string())) {
+                            input = in;
+                        }
+
+                    if (!input) {
+                        fprintf(stderr,
+                            "Unknown input socket name \"%s\" on \"%s\".\n",
+                            to_socket_name.c_str(),
+                            to_node_name.c_str());
+                    }
+                }
+                else {
+                    fprintf(stderr, "Unknown shader node name \"%s\".\n", to_node_name.c_str());
+                }
+
+                /* connect */
+                if (output && input) {
+                    graph->connect(output, input);
+                }
+            }
+            else {
+                fprintf(stderr, "Invalid from or to value for connect node.\n");
+            }
+
+            continue;
+        }
+
+        ShaderNode* snode = NULL;
+
+#if 0 //def WITH_OSL
+        if (node_name == "osl_shader") {
+            ShaderManager* manager = state.scene->shader_manager;
+
+            if (manager->use_osl()) {
+                std::string filepath;
+
+                if (xml_read_string(&filepath, node, "src")) {
+                    if (path_is_relative(filepath)) {
+                        filepath = path_join(state.base, filepath);
+                    }
+
+                    snode = OSLShaderManager::osl_node(graph, manager, filepath, "");
+
+                    if (!snode) {
+                        fprintf(stderr, "Failed to create OSL node from \"%s\".\n", filepath.c_str());
+                        continue;
+                    }
+                }
+                else {
+                    fprintf(stderr, "OSL node missing \"src\" attribute.\n");
+                    continue;
+                }
+            }
+            else {
+                fprintf(stderr, "OSL node without using --shadingsys osl.\n");
+                continue;
+            }
+        }
+        else
+#endif
+        {
+            /* exception for name collision */
+            if (node_name == "background") {
+                node_name = "background_shader";
+            }
+
+            const NodeType* node_type = NodeType::find(node_name);
+
+            if (!node_type) {
+                fprintf(stderr, "Unknown shader node \"%s\".\n", node.name());
+                continue;
+            }
+            else if (node_type->type != NodeType::SHADER) {
+                fprintf(stderr, "Node type \"%s\" is not a shader node.\n", node_type->name.c_str());
+                continue;
+            }
+            else if (node_type->create == NULL) {
+                fprintf(stderr, "Can't create abstract node type \"%s\".\n", node_type->name.c_str());
+                continue;
+            }
+
+            snode = (ShaderNode*)node_type->create(node_type);
+            snode->set_owner(graph);
+        }
+
+        xml_read_node(graph_reader, snode, node);
+
+        if (node_name == "image_texture") {
+            ImageTextureNode* img = (ImageTextureNode*)snode;
+            //ustring filename(path_join(state.base, img->get_filename().string()));
+            ustring filename(img->get_filename().string());
+            img->set_filename(filename);
+        }
+        else if (node_name == "environment_texture") {
+            EnvironmentTextureNode* env = (EnvironmentTextureNode*)snode;
+            //ustring filename(path_join(state.base, env->get_filename().string()));
+            ustring filename(env->get_filename().string());
+            env->set_filename(filename);
+        }
+
+        if (snode) {
+            /* add to graph */
+            graph->add(snode);
+        }
+    }
 }
 
 CCL_NAMESPACE_END

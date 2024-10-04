@@ -682,15 +682,15 @@ endif()
 # Epoxy
 ###########################################################################
 
-if((WITH_CYCLES_STANDALONE AND WITH_CYCLES_STANDALONE_GUI) OR
-   WITH_CYCLES_HYDRA_RENDER_DELEGATE)
+#if((WITH_CYCLES_STANDALONE AND WITH_CYCLES_STANDALONE_GUI) OR
+#   WITH_CYCLES_HYDRA_RENDER_DELEGATE)
   if(MSVC AND EXISTS ${_cycles_lib_dir})
     set(Epoxy_LIBRARIES "${_cycles_lib_dir}/epoxy/lib/epoxy.lib")
     set(Epoxy_INCLUDE_DIRS "${_cycles_lib_dir}/epoxy/include")
   else()
     find_package(Epoxy REQUIRED)
   endif()
-endif()
+#endif()
 
 if(WIN32)
   add_bundled_libraries(epoxy/bin)

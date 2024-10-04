@@ -56,6 +56,34 @@ class VDBImageLoader : public ImageLoader {
 #endif
 };
 
+#ifdef WITH_NANOVDB
+class NanoVDBImageLoader : public VDBImageLoader {
+public:
+    NanoVDBImageLoader(nanovdb::NanoGrid<float>* g, size_t s);
+    ~NanoVDBImageLoader();
+
+    virtual bool load_metadata(const ImageDeviceFeatures& features,
+        ImageMetaData& metadata) override;
+
+    virtual bool load_pixels(const ImageMetaData& metadata,
+        void* pixels,
+        const size_t pixels_size,
+        const bool associate_alpha) override;
+
+    virtual string name() const override;
+
+    virtual bool equals(const ImageLoader& other) const override;
+
+    virtual void cleanup() override;
+
+    virtual bool is_vdb_loader() const override;
+
+protected:
+    size_t nanogrid_size;
+    nanovdb::NanoGrid<float>* nanogrid;
+};
+#endif
+
 CCL_NAMESPACE_END
 
 #endif /* __IMAGE_VDB__ */

@@ -30,6 +30,7 @@ NODE_DEFINE(Volume)
   SOCKET_FLOAT(step_size, "Step Size", 0.0f);
   SOCKET_BOOLEAN(object_space, "Object Space", false);
   SOCKET_FLOAT(velocity_scale, "Velocity Scale", 1.0f);
+  SOCKET_BOOLEAN(is_nanovdb, "NanoVDB", false);
 
   return type;
 }
@@ -39,6 +40,7 @@ Volume::Volume() : Mesh(get_node_type(), Geometry::VOLUME)
   clipping = 0.001f;
   step_size = 0.0f;
   object_space = false;
+  is_nanovdb = false;
 }
 
 void Volume::clear(bool preserve_shaders)
