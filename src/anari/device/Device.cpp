@@ -191,7 +191,7 @@ ANARISampler CyclesDevice::newSampler(const char *subtype)
 ANARISpatialField CyclesDevice::newSpatialField(const char *subtype)
 {
   initDevice();
-  return (ANARISpatialField) new UnknownObject(ANARI_SPATIAL_FIELD, subtype, deviceState());
+  return getHandleForAPI<ANARISpatialField>(SpatialField::createInstance(subtype, deviceState()));
 }
 
 ANARISurface CyclesDevice::newSurface()
@@ -203,7 +203,7 @@ ANARISurface CyclesDevice::newSurface()
 ANARIVolume CyclesDevice::newVolume(const char *subtype)
 {
   initDevice();
-  return (ANARIVolume) new UnknownObject(ANARI_VOLUME, subtype, deviceState());
+  return getHandleForAPI<ANARIVolume>(Volume::createInstance(subtype, deviceState()));
 }
 
 ANARIWorld CyclesDevice::newWorld()

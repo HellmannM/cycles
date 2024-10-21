@@ -22,10 +22,13 @@ void Group::commit()
 {
   cleanup();
   m_surfaceData = getParamObject<ObjectArray>("surface");
+  m_volumeData = getParamObject<ObjectArray>("volume");
   m_lightData = getParamObject<ObjectArray>("light");
 
   if (m_surfaceData)
     m_surfaceData->addChangeObserver(this);
+  if (m_volumeData)
+    m_volumeData->addChangeObserver(this);    
   if (m_lightData)
     m_lightData->addChangeObserver(this);
 }
@@ -39,6 +42,27 @@ void Group::addGroupToCurrentWorld(const ccl::Transform &xfm) const
     auto **surfacesEnd = (Surface **)m_surfaceData->handlesEnd();
 
     std::for_each(surfacesBegin, surfacesEnd, [&](Surface *s) {
+      if (!s->isValid()) {
+        s->warnIfUnknownObject();
+        return;
+      }
+
+      auto *g = s->makeCyclesGeometry();
+      g->tag_update(state.scene, true);
+      state.scene->geometry.push_back(g);
+
+      auto *o = new ccl::Object();
+      o->set_geometry(g);
+      o->set_tfm(xfm);
+      state.scene->objects.push_back(o);
+    });
+  }
+
+  if (m_volumeData) {
+    auto **volumesBegin = (Volume **)m_volumeData->handlesBegin();
+    auto **volumesEnd = (Volume **)m_volumeData->handlesEnd();
+
+    std::for_each(volumesBegin, volumesEnd, [&](Volume *s) {
       if (!s->isValid()) {
         s->warnIfUnknownObject();
         return;
@@ -86,6 +110,17 @@ box3 Group::bounds() const
         s->warnIfUnknownObject();
     });
   }
+  if (m_volumeData) {
+    auto **volumesBegin = (Volume **)m_volumeData->handlesBegin();
+    auto **volumesEnd = (Volume **)m_volumeData->handlesEnd();
+
+    std::for_each(volumesBegin, volumesEnd, [&](Volume *s) {
+      if (s->isValid())
+        extend(b, s->bounds());
+      else
+        s->warnIfUnknownObject();
+    });
+  }
   return b;
 }
 
@@ -93,6 +128,8 @@ void Group::cleanup()
 {
   if (m_surfaceData)
     m_surfaceData->removeChangeObserver(this);
+  if (m_volumeData)
+    m_volumeData->removeChangeObserver(this);    
   if (m_lightData)
     m_lightData->removeChangeObserver(this);
 }

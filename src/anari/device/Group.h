@@ -5,6 +5,7 @@
 
 #include "Light.h"
 #include "Surface.h"
+#include "Volume.h"
 #include "array/ObjectArray.h"
 
 namespace cycles {
@@ -23,6 +24,7 @@ struct Group : public Object {
   void cleanup();
 
   helium::IntrusivePtr<ObjectArray> m_surfaceData;
+  helium::IntrusivePtr<ObjectArray> m_volumeData;
   helium::IntrusivePtr<ObjectArray> m_lightData;
 };
 
