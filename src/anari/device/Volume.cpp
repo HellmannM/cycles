@@ -5,6 +5,7 @@
 // std
 #include <numeric>
 // cycles
+#include "scene/shader_nodes.h"
 #include "scene/volume.h"
 #include "graph/node_xml.h"
 #include "util/foreach.h"
@@ -42,28 +43,6 @@ TransferFunction1D::TransferFunction1D(CyclesGlobalState* s)
     m_graph = new ccl::ShaderGraph();
 
 #if 0
-    const char* c_volume_path = getenv("CYCLES_GRAPH_VOLUME");
-    xml_read_shader(c_volume_path, m_graph);
-
-    foreach(ccl::ShaderNode *node, m_graph->nodes) {
-        if (node->type->name == "map_range") {
-            m_mapRangeNode = (ccl::MapRangeNode*)node;
-        }
-
-        if (node->type->name == "rgb_ramp") {
-            m_rgbRampNode = (ccl::RGBRampNode*)node;
-        }
-
-        if (node->type->name == "math") {
-            m_mathNode = (ccl::MathNode*)node;
-        }
-    }
-#endif
-
-    m_graph->simplified = true; // TODO
-
-#if 0
-
     m_attributeNode = m_graph->create_node<ccl::AttributeNode>();
     m_attributeNode->set_attribute(ustring("density"));
     m_graph->add(m_attributeNode);
@@ -98,6 +77,14 @@ TransferFunction1D::TransferFunction1D(CyclesGlobalState* s)
     m_graph->connect(m_absorptionVolumeNode->output("Volume"), m_addShaderNode->input("Closure2"));
     m_graph->connect(m_addShaderNode->output("Closure"), m_graph->output()->input("Volume"));
 #endif
+    m_volumeNode = m_graph->create_node<ccl::PrincipledVolumeNode>();
+    m_volumeNode->input("Color")->set(make_float3(0.25f, 0.5f, 1.0f));
+    m_volumeNode->input("Density")->set(0.6f);
+    m_graph->add(m_volumeNode);
+    m_graph->connect(
+        m_volumeNode->output("Volume"),
+        m_graph->output()->input("Volume")
+    );
 
     m_shader.set_graph(m_graph);
     m_shader.tag_update(state.scene);

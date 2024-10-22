@@ -79,11 +79,12 @@ namespace cycles {
 		ccl::ShaderGraph* m_graph{ nullptr };
 
 		// Nodes
-		//ccl::AttributeNode* m_attributeNode{ nullptr };
+		ccl::AttributeNode* m_attributeNode{ nullptr };
 		ccl::MapRangeNode* m_mapRangeNode{ nullptr };
 		ccl::RGBRampNode* m_rgbRampNode{ nullptr };
 		ccl::MathNode* m_mathNode{ nullptr };
-		////ccl::PrincipledVolumeNode* m_volumeNode{ nullptr };
+		
+		ccl::PrincipledVolumeNode* m_volumeNode{ nullptr };
 		//ccl::EmissionNode* m_emissionNode{ nullptr };
 		//ccl::AbsorptionVolumeNode* m_absorptionVolumeNode{ nullptr };
 		//ccl::AddClosureNode* m_addShaderNode{ nullptr };
