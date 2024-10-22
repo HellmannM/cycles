@@ -16,7 +16,15 @@ bool ANARIImageLoader::load_metadata(const ImageDeviceFeatures &features, ImageM
 {
   metadata.byte_size = p_field->m_data->totalSize() * anari::sizeOf(p_field->m_data->elementType());
   metadata.channels = 3;
-  metadata.use_transform_3d = false; //TODO necessary?
+  //TODO
+  Transform t;
+  for (int col = 0; col < 4; col++) {
+    for (int row = 0; row < 3; row++) {
+      t[row][col] = (row == col) ? 1 : 0;
+    }
+  }
+  metadata.transform_3d = t;
+  metadata.use_transform_3d = true;
 
   metadata.width  = p_field->m_dims[0];
   metadata.height = p_field->m_dims[1];
