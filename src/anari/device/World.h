@@ -27,6 +27,7 @@ struct World : public Object {
 
   helium::IntrusivePtr<ObjectArray> m_zeroSurfaceData;
   helium::IntrusivePtr<ObjectArray> m_zeroLightData;
+  helium::IntrusivePtr<ObjectArray> m_zeroVolumeData;
   helium::IntrusivePtr<Group> m_zeroGroup;
   helium::IntrusivePtr<Instance> m_zeroInstance;
 

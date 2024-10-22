@@ -53,8 +53,9 @@ void World::commit()
   cleanup();
   m_zeroSurfaceData = getParamObject<ObjectArray>("surface");
   m_zeroLightData = getParamObject<ObjectArray>("light");
+  m_zeroVolumeData = getParamObject<ObjectArray>("volume");
 
-  const bool addZeroInstance = m_zeroSurfaceData || m_zeroLightData;
+  const bool addZeroInstance = m_zeroSurfaceData || m_zeroLightData || m_zeroVolumeData;
 
   if (addZeroInstance)
     reportMessage(ANARI_SEVERITY_DEBUG, "cycles::World will add zero instance");
@@ -73,6 +74,12 @@ void World::commit()
   else
     m_zeroGroup->removeParam("light");
 
+  if (m_zeroVolumeData) {
+    reportMessage(ANARI_SEVERITY_DEBUG, "cycles::World found volumes in zero instance");
+    m_zeroGroup->setParamDirect("volume", getParamDirect("volume"));
+  } else {
+    m_zeroGroup->removeParam("volume");
+  }
   m_zeroGroup->commit();
 
   m_instanceData = getParamObject<ObjectArray>("instance");
@@ -83,6 +90,8 @@ void World::commit()
     m_zeroSurfaceData->addChangeObserver(this);
   if (m_zeroLightData)
     m_zeroLightData->addChangeObserver(this);
+  if (m_zeroVolumeData)
+    m_zeroVolumeData->addChangeObserver(this);
 }
 
 void World::setWorldObjectsCurrent()
