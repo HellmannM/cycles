@@ -40,6 +40,7 @@ PRIVATE
   FrameOutputDriver.cpp
   Geometry.cpp
   Group.cpp
+  ImageLoader.cpp
   Instance.cpp
   Library.cpp
   Light.cpp
