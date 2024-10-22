@@ -5,6 +5,7 @@
 #include <cfloat>
 // ours
 //#include "Array.h"
+#include "ImageLoader.h"
 #include "SpatialField.h"
 // cycles
 #include "scene/volume.h"
@@ -74,6 +75,8 @@ namespace cycles {
 	ccl::Geometry* StructuredRegularField::makeCyclesGeometry()
 	{
 		auto* volume = new ccl::Volume();
+        volume->name = ccl::ustring("ANARI Volume");
+
 		// volume->clear(true);
 		// volume->set_clipping(b_render.clipping());
 		volume->set_clipping(0.0f);
@@ -81,6 +84,13 @@ namespace cycles {
 		volume->set_step_size(0.0f);
 		// volume->set_object_space((b_render.space() == BL::VolumeRender::space_OBJECT));
 		volume->set_object_space(true);
+
+		Attribute* attr =
+			volume->attributes.add(ccl::ATTR_STD_VOLUME_DENSITY);
+		ImageLoader* loader = new ANARIImageLoader(this);
+		ImageParams params;
+		auto& state = *deviceState();
+		attr->data_voxel() = state.scene->image_manager->add_image(loader, params, false);
 
 		auto vertices = std::vector<float3>{
 			{-1.0f, -1.0f, 1.0f},
