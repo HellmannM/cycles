@@ -128,7 +128,7 @@ box3 World::bounds() const
 {
   box3 b = empty_box3();
 
-  if (m_zeroSurfaceData)
+  if (m_zeroSurfaceData || m_zeroVolumeData)
     extend(b, m_zeroInstance->bounds());
 
   if (m_instanceData) {
