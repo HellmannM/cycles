@@ -36,59 +36,35 @@ Volume *Volume::createInstance(std::string_view subtype, CyclesGlobalState *s)
 TransferFunction1D::TransferFunction1D(CyclesGlobalState* s)
     : Volume(s)
 {
-    auto& state = *deviceState();
-    state.objectCounts.materials++;
-    state.scene->shaders.push_back(&m_shader);
+  auto& state = *deviceState();
+  state.objectCounts.materials++;
+  state.scene->shaders.push_back(&m_shader);
 
-    m_graph = new ccl::ShaderGraph();
+  m_graph = new ccl::ShaderGraph();
 
-#if 0
-    m_attributeNode = m_graph->create_node<ccl::AttributeNode>();
-    m_attributeNode->set_attribute(ustring("density"));
-    m_graph->add(m_attributeNode);
+  m_volumeNode = m_graph->create_node<ccl::PrincipledVolumeNode>();
+  m_volumeNode->set_density_attribute(ustring("never-connected"));
+  m_graph->add(m_volumeNode);
+  m_graph->connect(
+    m_volumeNode->output("Volume"),
+    m_graph->output()->input("Volume")
+  );
+  m_attributeNode = m_graph->create_node<ccl::AttributeNode>();
+  m_attributeNode->set_attribute(ustring("voxels"));
+  m_graph->add(m_attributeNode);
+  m_mapRangeNode = m_graph->create_node<ccl::MapRangeNode>();
+  m_mapRangeNode->set_clamp(true);
+  m_graph->add(m_mapRangeNode);
+  m_rgbRampNode = m_graph->create_node<ccl::RGBRampNode>();
+  m_graph->add(m_rgbRampNode);
+  m_graph->connect(m_attributeNode->output("Fac"), m_mapRangeNode->input("Value"));
+  m_graph->connect(m_mapRangeNode->output("Result"), m_rgbRampNode->input("Fac"));
+  m_graph->connect(m_rgbRampNode->output("Color"), m_volumeNode->input("Color"));
+  m_graph->connect(m_rgbRampNode->output("Alpha"), m_volumeNode->input("Density"));
 
-    m_mapRangeNode = m_graph->create_node<ccl::MapRangeNode>();
-    m_mapRangeNode->set_clamp(true);
-    m_graph->add(m_mapRangeNode);
-
-    m_rgbRampNode = m_graph->create_node<ccl::RGBRampNode>();
-    m_graph->add(m_rgbRampNode);
-
-    m_mathNode = m_graph->create_node<ccl::MathNode>();
-    m_mathNode->set_math_type(ccl::NODE_MATH_MULTIPLY);
-    m_graph->add(m_mathNode);
-
-    m_emissionNode = m_graph->create_node<ccl::EmissionNode>();
-    m_graph->add(m_emissionNode);
-    m_absorptionVolumeNode = m_graph->create_node<ccl::AbsorptionVolumeNode>();
-    m_absorptionVolumeNode->set_color(ccl::make_float3(0.3, 0.3, 0.3));
-    m_graph->add(m_absorptionVolumeNode);
-
-    m_addShaderNode = m_graph->create_node<ccl::AddClosureNode>();
-    m_graph->add(m_addShaderNode);
-
-    m_graph->connect(m_attributeNode->output("Fac"), m_mapRangeNode->input("Value"));
-    m_graph->connect(m_mapRangeNode->output("Result"), m_rgbRampNode->input("Fac"));
-    m_graph->connect(m_rgbRampNode->output("Color"), m_emissionNode->input("Color"));
-    m_graph->connect(m_rgbRampNode->output("Alpha"), m_mathNode->input("Value1"));
-    m_graph->connect(m_mathNode->output("Value"), m_emissionNode->input("Strength"));
-    m_graph->connect(m_rgbRampNode->output("Alpha"), m_absorptionVolumeNode->input("Density"));
-    m_graph->connect(m_emissionNode->output("Emission"), m_addShaderNode->input("Closure1"));
-    m_graph->connect(m_absorptionVolumeNode->output("Volume"), m_addShaderNode->input("Closure2"));
-    m_graph->connect(m_addShaderNode->output("Closure"), m_graph->output()->input("Volume"));
-#endif
-    m_volumeNode = m_graph->create_node<ccl::PrincipledVolumeNode>();
-    m_volumeNode->input("Color")->set(make_float3(0.25f, 0.5f, 1.0f));
-    m_volumeNode->input("Density")->set(0.6f);
-    m_graph->add(m_volumeNode);
-    m_graph->connect(
-        m_volumeNode->output("Volume"),
-        m_graph->output()->input("Volume")
-    );
-
-    m_shader.set_graph(m_graph);
-    m_shader.tag_update(state.scene);
-    
+  m_shader.set_graph(m_graph);
+  m_shader.tag_update(state.scene);
+  
 }
 
 TransferFunction1D::~TransferFunction1D()

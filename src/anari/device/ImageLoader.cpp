@@ -15,15 +15,9 @@ ANARIImageLoader::~ANARIImageLoader() {}
 bool ANARIImageLoader::load_metadata(const ImageDeviceFeatures &features, ImageMetaData &metadata)
 {
   metadata.byte_size = p_field->m_data->totalSize() * anari::sizeOf(p_field->m_data->elementType());
-  metadata.channels = 3;
-  //TODO
-  Transform t;
-  for (int col = 0; col < 4; col++) {
-    for (int row = 0; row < 3; row++) {
-      t[row][col] = (row == col) ? 1 : 0;
-    }
-  }
-  metadata.transform_3d = t;
+  metadata.channels = 1;
+  metadata.transform_3d = ccl::transform_scale(
+        ccl::make_float3(1.f/p_field->m_dims[0], 1.f/p_field->m_dims[1], 1.f/p_field->m_dims[2]));
   metadata.use_transform_3d = true;
 
   metadata.width  = p_field->m_dims[0];

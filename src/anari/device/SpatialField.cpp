@@ -81,56 +81,16 @@ namespace cycles {
 		// volume->set_clipping(b_render.clipping());
 		volume->set_clipping(0.0f);
 		// volume->set_step_size(b_render.step_size());
-		volume->set_step_size(0.0f);
+		volume->set_step_size(std::min(m_dims[0], std::min(m_dims[1], m_dims[2])));
 		// volume->set_object_space((b_render.space() == BL::VolumeRender::space_OBJECT));
 		volume->set_object_space(true);
 
 		Attribute* attr =
-			volume->attributes.add(ccl::ATTR_STD_VOLUME_DENSITY);
+			volume->attributes.add(ustring("voxels"), TypeDesc::TypeFloat, ATTR_ELEMENT_VOXEL);
 		ImageLoader* loader = new ANARIImageLoader(this);
 		ImageParams params;
 		auto& state = *deviceState();
 		attr->data_voxel() = state.scene->image_manager->add_image(loader, params, false);
-
-		auto vertices = std::vector<float3>{
-			{-1.0f, -1.0f, 1.0f},
-			{1.0f, -1.0f, 1.0f},
-			{-1.0f, 1.0f, 1.0f},
-			{1.0f, 1.0f, 1.0f},
-			{-1.0f, -1.0f, -1.0f},
-			{1.0f, -1.0f, -1.0f},
-			{-1.0f, 1.0f, -1.0f},
-			{1.0f, 1.0f, -1.0f},
-		};
-
-		ccl::array<ccl::float3> P;
-		P.resize(8);
-		std::copy(cbegin(vertices), cend(vertices), P.begin());
-		volume->set_verts(P);
-		auto faces = std::vector<int3>{
-			{0, 1, 2},
-			{2, 1, 3},
-			{1, 5, 3},
-			{3, 5, 7},
-			{5, 4, 7},
-			{7, 4, 6},
-			{4, 0, 6},
-			{6, 0, 2},
-			{2, 3, 6},
-			{6, 3, 7},
-			{5, 4, 1},
-			{1, 4, 0},
-		};
-		auto numTriangles = size(faces);
-		volume->reserve_mesh(numTriangles * 3, numTriangles);
-		for (const auto&f : faces) {
-			volume->add_triangle(f.x, f.y, f.z, 0 ,true);
-		}
-		//
-		// volume->add_triangle(0, 1, 2, 0, true);
-		// volume->add_triangle(2, 0, 1, 0, true);
-
-		// ccl::Attribute* attr = volume->attributes.add(ccl::ATTR_STD_VOLUME_DENSITY);
 
 		return volume;
 	}

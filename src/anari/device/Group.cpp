@@ -74,12 +74,7 @@ void Group::addGroupToCurrentWorld(const ccl::Transform &xfm) const
 
       auto *o = new ccl::Object();
       o->set_geometry(g);
-      //o->set_tfm(xfm);
-      Transform t;
-      t.x = {512,0,0,0};
-      t.y = {0,512,0,0};
-      t.z = {0,0,512,0};
-      o->set_tfm(t);
+      o->set_tfm(xfm);
       state.scene->objects.push_back(o);
     });
   }
