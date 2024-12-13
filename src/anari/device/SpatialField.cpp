@@ -77,13 +77,9 @@ namespace cycles {
 		auto* volume = new ccl::Volume();
         volume->name = ccl::ustring("ANARI Volume");
 
-		// volume->clear(true);
-		// volume->set_clipping(b_render.clipping());
-		volume->set_clipping(0.0f);
-		// volume->set_step_size(b_render.step_size());
-		volume->set_step_size(std::min(m_dims[0], std::min(m_dims[1], m_dims[2])));
-		// volume->set_object_space((b_render.space() == BL::VolumeRender::space_OBJECT));
+		volume->set_clipping(- FLT_MAX);
 		volume->set_object_space(true);
+		volume->set_volume_mesh(true);
 
 		Attribute* attr =
 			volume->attributes.add(ustring("voxels"), TypeDesc::TypeFloat, ATTR_ELEMENT_VOXEL);
@@ -92,7 +88,61 @@ namespace cycles {
 		auto& state = *deviceState();
 		attr->data_voxel() = state.scene->image_manager->add_image(loader, params, false);
 
-		return volume;
+		auto v_min = make_float3(0.5, 0.5f, 0.5f);
+		auto v_max = make_float3(m_dims[0] - 0.5f, m_dims[1] - 0.5f, m_dims[2] - 0.5f);
+		auto vertices = std::vector<float3>{
+			{v_min.x, v_min.y, v_max.z},
+			{v_max.x, v_min.y, v_max.z},
+			{v_min.x, v_max.y, v_max.z},
+			{v_max.x, v_max.y, v_max.z},
+			{v_min.x, v_min.y, v_min.z},
+			{v_max.x, v_min.y, v_min.z},
+			{v_min.x, v_max.y, v_min.z},
+			{v_max.x, v_max.y, v_min.z}
+		};
+		ccl::array<ccl::float3> P;
+		P.resize(8);
+		std::copy(cbegin(vertices), cend(vertices), P.begin());
+		volume->set_verts(P);
+
+		auto faces = std::vector<int3>{
+		    {0, 1, 2},
+		    {2, 1, 3},
+		    {1, 5, 3},
+		    {3, 5, 7},
+		    {5, 4, 7},
+		    {7, 4, 6},
+		    {4, 0, 6},
+		    {6, 0, 2},
+		    {2, 3, 6},
+		    {6, 3, 7},
+		    {5, 4, 1},
+		    {1, 4, 0}
+		};
+		auto numTriangles = faces.size();
+		volume->reserve_mesh(numTriangles * 3, numTriangles);
+		for (const auto &f : faces) {
+			volume->add_triangle(f.x, f.y, f.z, 0, true);
+		}
+
+		std::vector<float3> face_normals;
+		for (const auto &f : faces) {
+			auto v1 = vertices[f.x];
+			auto v2 = vertices[f.y];
+			auto v3 = vertices[f.z];
+			auto e1 = normalize(v2-v1);
+			auto e2 = normalize(v3-v1);
+
+		  	face_normals.push_back(cross(e1, e2));
+		}
+
+		Attribute *attr_fN = volume->attributes.add(ATTR_STD_FACE_NORMAL);
+		float3 *fN = attr_fN->data_float3();
+		for (size_t i = 0; i < face_normals.size(); ++i) {
+			fN[i] = face_normals[i];
+		}
+
+    	return volume;
 	}
 
 	box3 StructuredRegularField::bounds() const
